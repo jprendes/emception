@@ -1,0 +1,36 @@
+diff --git a/src/js/pyodide.js b/src/js/pyodide.js
+index 338f0e1..ef36da9 100644
+--- a/src/js/pyodide.js
++++ b/src/js/pyodide.js
+@@ -191,6 +191,7 @@ export async function loadPyodide(config) {
+     stdin: globalThis.prompt ? globalThis.prompt : undefined,
+   };
+   config = Object.assign(default_config, config);
++  /*
+   if (globalThis.__pyodide_module) {
+     if (globalThis.languagePluginURL) {
+       throw new Error(
+@@ -204,6 +205,7 @@ export async function loadPyodide(config) {
+   // See "--export-name=__pyodide_module" in buildpkg.py
+   globalThis.__pyodide_module = Module;
+   loadPyodide.inProgress = true;
++  */
+   if (!config.indexURL) {
+     throw new Error("Please provide indexURL parameter to loadPyodide");
+   }
+@@ -220,7 +222,9 @@ export async function loadPyodide(config) {
+   let moduleLoaded = new Promise((r) => (Module.postRun = r));
+ 
+   const scriptSrc = `${baseURL}pyodide.asm.js`;
+-  await loadScript(scriptSrc);
++  if (!globalThis._createPyodideModule) {
++    await loadScript(scriptSrc);
++  }
+ 
+   // _createPyodideModule is specified in the Makefile by the linker flag:
+   // `-s EXPORT_NAME="'_createPyodideModule'"`
+@@ -275,4 +279,3 @@ def temp(pyodide_js, Module, jsglobals):
+ 
+   return pyodide;
+ }
+-globalThis.loadPyodide = loadPyodide;

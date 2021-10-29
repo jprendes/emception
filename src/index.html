@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Emscripten</title>
+    <style>
+      body {
+        background: #333;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import FileSystem from "./FileSystem.mjs";
+
+      import LlvmBoxProcess from "./LlvmBoxProcess.mjs";
+      import BinaryenBoxProcess from "./BinaryenBoxProcess.mjs";
+      import PythonProcess from "./PythonProcess.mjs";
+      import NodeProcess from "./NodeProcess.mjs";
+
+      async function main() {
+        const debug_log = (...args) => {
+            if (globalThis.DEBUG !== true) return;
+            console.log(...args);
+        };
+
+        const FS = await new FileSystem();
+        globalThis.FS = FS;
+
+        await FS.unpack([
+            "./emscripten.pack.txt",
+            "./node.pack.txt",
+            "./usr_bin.pack.txt",
+            "./working.pack.txt",
+        ]);
+
+        FS.persist("/emscripten/cache");
+        await FS.pull();
+
+        if (FS.exists("/emscripten/cache/cache.lock")) {
+            FS.unlink("/emscripten/cache/cache.lock");
+        }
+
+        function sleep(s) {
+            return new Promise((resolve) => setTimeout(resolve, s));
+        }
+
+        const tools = {
+            "llvm-box": new LlvmBoxProcess(),
+            "binaryen-box": new BinaryenBoxProcess(),
+            "node": new NodeProcess(),
+            "python": new PythonProcess(),
+            "main-python": new PythonProcess(),
+        };
+        window.tools = tools;
+
+        const run_process = async (argv, opts = {}) => {
+            await sleep(100);
+
+            debug_log(argv);
+
+            const in_emscripten = argv[0].match(/\/emscripten\/(.+)(\.py)?/)
+            if (in_emscripten) {
+                argv[0] = `/emscripten/${in_emscripten[1]}.py`;
+            }
+
+            if (!FS.exists(argv[0])) {
+                const result = {
+                    returncode: 1,
+                    stdout: "",
+                    stderr: `Executable not found: ${JSON.stringify(argv[0])}`,
+                };
+                debug_log(result);
+                return result;
+            }
+
+            const tool_info = argv[0].endsWith(".py") ? "python" : FS.readFile(argv[0], {encoding: "utf8"});
+            const [tool_name, ...extra_args] = tool_info.split(";")
+
+            if (!(tool_name in tools)) {
+                const result = {
+                    returncode: 1,
+                    stdout: "",
+                    stderr: `File is not executable: ${JSON.stringify(argv[0])}`,
+                };
+                debug_log(result);
+                return result;
+            }
+
+            argv = [...extra_args, ...argv];
+            debug_log(argv, opts);
+
+            const tool = await tools[tool_name];
+            const result = await tool.exec(argv, {
+                ...opts,
+                cwd: opts.cwd || "/",
+                path: ["/emscripten"]
+            });
+            await FS.push();
+            debug_log(result);
+            return result;
+        };
+
+        for (let tool of Object.values(tools)) {
+            tool.then((tool) => {
+                if ("onrunprocess" in tool) tool.onrunprocess = run_process;
+                tool.mount(FS, ["/tmp", "/working", "/emscripten", "/usr/bin", "/node"]);
+            });
+        }
+
+        window.run_emcc = async (...args) => {
+            await tools["main-python"];
+            if (args.length == 1) args = args[0].split(/ +/);
+            args[0] = `/emscripten/${args[0]}.py`;
+            return await tools["main-python"].exec(args, {
+              cwd: "/working",
+              path: ["/emscripten"],
+              //print: (...args) => console.log(...args),
+              //printErr: (...args) => console.error(...args),
+            })
+        };
+        console.log(`run_emcc("em++ -c main.cpp -o main.o")`);
+      }
+      main();
+    </script>
+  </body>
+</html>
