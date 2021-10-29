@@ -1,7 +1,6 @@
 #!/bin/bash
 
 mkdir -p usr/bin
-mkdir -p emscripten
 
 # llvm-box binaries
 echo -n "llvm-box;clang-14"                     > usr/bin/clang++
