@@ -21,9 +21,13 @@ BINARYEN_BUILD=$BUILD/binaryen
 if [ ! -d $BINARYEN_SRC/ ]; then
     git clone https://github.com/WebAssembly/binaryen.git "$BINARYEN_SRC/"
 
+    pushd $BINARYEN_SRC/
+    
     # This is the last tested commit of binaryen.
     # Feel free to try with a newer version
     git reset --hard ef686a4d932b9b86edc34a3b9b15926f943f6f7b
+
+    popd
 fi
 
 if [ ! -d $BINARYEN_BUILD/ ]; then

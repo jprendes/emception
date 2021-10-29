@@ -22,14 +22,16 @@ LLVM_NATIVE=$BUILD/llvm-native
 if [ ! -d $LLVM_SRC/ ]; then
     git clone https://github.com/llvm/llvm-project.git "$LLVM_SRC/"
 
+    pushd $LLVM_SRC/
+    
     # This is the last tested commit of llvm-project.
     # Feel free to try with a newer version
     git reset --hard fe2b2cb58ebb57427c0a12e54a4ed63553c397ab
 
     # The clang driver will sometimes spawn a new process to avoid memory leaks.
     # Since this complicates matters quite a lot for us, just disable that.
-    pushd $LLVM_SRC/
     git apply $SRC/patches/llvm-project.patch
+
     popd
 fi
 

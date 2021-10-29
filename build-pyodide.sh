@@ -22,6 +22,8 @@ if [ ! -d $PYODIDE_SRC/ ]; then
     # We use a modified version of pyodide that compiles with Asyncify
     git clone https://github.com/jprendes/pyodide.git "$PYODIDE_SRC/"
 
+    pushd $PYODIDE_SRC/
+
     # This is the last tested commit of jprendes/pyodide.
     # Feel free to try with a newer version
     git reset --hard 7698df5529cc37f6f538f4d841c03bb47c1cec9e
@@ -30,8 +32,8 @@ if [ ! -d $PYODIDE_SRC/ ]; then
     # That makes it so that we can't have two pyodides running in the same page.
     # Since we don't need to load packages, patch that so that we can run many pyodides.
     # This is the bulk of the patches, but we still need some extra patches in the built files.
-    pushd $PYODIDE_SRC/
     git apply $SRC/patches/pyodide.patch
+
     popd
 fi
 
