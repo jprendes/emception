@@ -19,7 +19,7 @@ BINARYEN_BUILD=$BUILD/binaryen
 
 # If we don't have a copy of binaryen, make one
 if [ ! -d $BINARYEN_SRC/ ]; then
-    git clone git@github.com:WebAssembly/binaryen.git "$BINARYEN_SRC/"
+    git clone https://github.com/WebAssembly/binaryen.git "$BINARYEN_SRC/"
 
     # This is the last tested commit of binaryen.
     # Feel free to try with a newer version

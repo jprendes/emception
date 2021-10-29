@@ -20,7 +20,7 @@ PYODIDE_BUILD=$BUILD/pyodide
 # If we don't have a copy of pyodide, make one
 if [ ! -d $PYODIDE_SRC/ ]; then
     # We use a modified version of pyodide that compiles with Asyncify
-    git clone git@github.com:jprendes/pyodide.git "$PYODIDE_SRC/"
+    git clone https://github.com/jprendes/pyodide.git "$PYODIDE_SRC/"
 
     # This is the last tested commit of jprendes/pyodide.
     # Feel free to try with a newer version
