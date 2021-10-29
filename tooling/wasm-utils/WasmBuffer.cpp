@@ -1,6 +1,5 @@
 #include "WasmBuffer.hpp"
 
-#include <span>
 #include <stdexcept>
 
 namespace wasm_transform {
@@ -42,7 +41,7 @@ char WasmBuffer::readByte() {
     return m_buffer[m_index++];
 }
 std::string_view WasmBuffer::readBytes(size_t length) {
-    if (length == std::dynamic_extent) {
+    if (length == std::string_view::npos) {
         length = m_buffer.size() - m_index;
     }
     if (m_buffer.size() < m_index + length) {

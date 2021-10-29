@@ -4,7 +4,6 @@
 #include "WasmIO.hpp"
 
 #include <cstdint>
-#include <span>
 #include <stdexcept>
 #include <string_view>
 #include <type_traits>
@@ -41,7 +40,7 @@ class WasmBuffer {
     }
 
     char readByte();
-    std::string_view readBytes(size_t length = std::dynamic_extent);
+    std::string_view readBytes(size_t length = std::string_view::npos);
 
     template<typename T>
     void write(T const & val) {
