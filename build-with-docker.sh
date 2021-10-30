@@ -5,7 +5,6 @@ docker build \
     .
 
 mkdir -p $(pwd)/build/emsdk_cache
-/emsdk/upstream/emscripten/cache
 
 docker run \
     -it --rm \
