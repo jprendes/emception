@@ -1,0 +1,5 @@
+EMSCRIPTEN_ROOT = '/emscripten'
+LLVM_ROOT = '/usr/bin'
+BINARYEN_ROOT = '/usr'
+NODE_JS = '/usr/bin/node'
+JAVA = '/usr/bin/java'

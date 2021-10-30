@@ -5,6 +5,9 @@ if [ -d emscripten ]; then
     exit
 fi
 
+SRC=$(dirname $0)
+SRC=$(realpath "$SRC")
+
 # We use here 2.0.31 since that's what it's been tested with.
 # Feel free to try a newer version
 curl --silent --output emscripten.zip https://codeload.github.com/emscripten-core/emscripten/zip/refs/tags/2.0.31
@@ -13,6 +16,8 @@ rm emscripten.zip
 mv emscripten-* emscripten
 
 pushd emscripten/
+
+cp $SRC/config ./.emscripten
 
 # We won't support closure-compiler, remove it from the dependencies
 cat package.json | \
