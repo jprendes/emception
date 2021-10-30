@@ -8,7 +8,7 @@ fi
 # We use here 2.0.31 since that's what it's been tested with.
 # Feel free to try a newer version
 curl --silent --output emscripten.zip https://codeload.github.com/emscripten-core/emscripten/zip/refs/tags/2.0.31
-unzip emscripten.zip
+unzip -q emscripten.zip
 rm emscripten.zip
 mv emscripten-* emscripten
 
