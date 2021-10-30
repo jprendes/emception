@@ -10,3 +10,5 @@ RUN apt update && apt install -y docker.io clang-12 ninja-build jq brotli
 
 # clang-12 binaries are installed with the `-12` suffix, so create symlinks without it.
 RUN ls /usr/bin/ | grep "\-12" | sed -E 's/(.*)-12/\1/' | xargs -I{} ln -s /usr/bin/{}-12 /usr/bin/{}
+
+RUN mkdir -p /.npm && chmod a+rwx /.npm
