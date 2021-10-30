@@ -27,10 +27,15 @@ mkdir -p $BUILD/emception/pyodide/
 cp $BUILD/pyodide/* $BUILD/emception/pyodide/
 
 mkdir -p $BUILD/emception/brotli/
-cp $BUILD/pyodide/* $BUILD/emception/brotli/
+cp $BUILD/brotli/brotli.{mjs,wasm} $BUILD/emception/brotli/
 
 mkdir -p $BUILD/emception/wasm-package/
 cp $BUILD/wasm-package/wasm-package.{mjs,wasm} $BUILD/emception/wasm-package/
 
 $SRC/build-packs.sh $BUILD
-cp $BUILD/packs/root.pack $BUILD/emception
+cp $BUILD/packs/root.pack $BUILD/emception/
+
+brotli --best --keep $BUILD/emception/llvm/llvm-box.wasm
+brotli --best --keep $BUILD/emception/binaryen/binaryen-box.wasm
+brotli --best --keep $BUILD/emception/pyodide/binaryen-box.wasm
+brotli --best --keep $BUILD/emception/root.pack
