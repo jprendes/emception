@@ -11,7 +11,8 @@ SRC=$(realpath "$SRC")
 BUILD=$(realpath "$BUILD")
 
 mkdir -p $BUILD/emception
+mkdir -p $BUILD/packs/working
 
 pushd $SRC
-$BUILD/tooling/wasm-package pack $BUILD/emception/working.pack.txt $(find working/)
+$BUILD/tooling/wasm-package pack $BUILD/packs/working/working.pack $(find working/)
 popd

@@ -1,19 +1,36 @@
 import EmProcess from "./EmProcess.mjs";
 import WasmPackageModule from "./wasm-package/wasm-package.mjs";
 import { fetch_buffer } from "./utils.js";
+import BrotliProcess from "./BrotliProcess.mjs";
 
 const wasm = fetch_buffer("./wasm-package/wasm-package.wasm");
 
 export default class FileSystem extends EmProcess {
+    _brotli = null;
     constructor() {
         super(WasmPackageModule, wasm.then(wasm => ({
             wasmBinary: new Uint8Array(wasm)
         })));
+        this._brotli = (async () => {
+            const brotli = await new BrotliProcess();
+            await this;
+            brotli.mount(this.FS, "/tmp");
+            return brotli;
+        })();
     }
 
     async unpack(...urls) {
         return Promise.all(urls.flat().map(async (url) => {
-            this.FS.writeFile("/tmp/archive.pack", new Uint8Array(await fetch_buffer(url)));
+            const buffer = new Uint8Array(await fetch_buffer(url));
+            if (url.endsWith(".br")) {
+                // it's a brotli file, decompress it
+                const brotli = await this._brotli;
+                this.FS.writeFile("/tmp/archive.pack.br", buffer);
+                brotli.exec(["brotli", "--decompress", "/tmp/archive.pack.br"], { cwd: "/tmp/" });
+                this.FS.unlink("/tmp/archive.pack.br");
+            } else {
+                this.FS.writeFile("/tmp/archive.pack", buffer);
+            }
             this.exec(["wasm-package", "unpack", "/tmp/archive.pack"], { cwd: "/" });
             this.FS.unlink("/tmp/archive.pack");
         }));

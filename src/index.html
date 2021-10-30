@@ -27,12 +27,7 @@
         const FS = await new FileSystem();
         globalThis.FS = FS;
 
-        await FS.unpack([
-            "./emscripten.pack.txt",
-            "./node.pack.txt",
-            "./usr_bin.pack.txt",
-            "./working.pack.txt",
-        ]);
+        await FS.unpack("./root.pack.br");
 
         FS.persist("/emscripten/cache");
         await FS.pull();

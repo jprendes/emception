@@ -15,5 +15,5 @@ mkdir -p $BUILD/packs/node
 
 pushd $BUILD/packs/node
 $SRC/make.sh # builds files in the current working directory
-$BUILD/tooling/wasm-package pack $BUILD/emception/node.pack.txt $(find node/)
+$BUILD/tooling/wasm-package pack $BUILD/packs/node/node.pack $(find node/)
 popd

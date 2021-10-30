@@ -22,7 +22,7 @@ if [ ! -d $BINARYEN_SRC/ ]; then
     git clone https://github.com/WebAssembly/binaryen.git "$BINARYEN_SRC/"
 
     pushd $BINARYEN_SRC/
-    
+
     # This is the last tested commit of binaryen.
     # Feel free to try with a newer version
     git reset --hard ef686a4d932b9b86edc34a3b9b15926f943f6f7b
@@ -54,7 +54,7 @@ if [ ! -d $BINARYEN_BUILD/ ]; then
     # The patch-ninja.sh script assumes that.
     sed -i -E 's/\.js/.mjs/g' $BINARYEN_BUILD/build.ninja
 
-    # The mjs patching is over zealous, and some source JS files rather than just output files.
+    # The mjs patching is over zealous, and patches some source JS files rather than just output files.
     # Undo that.
     sed -i -E 's/\.mjs-/.js-/g' $BINARYEN_BUILD/build.ninja
     sed -i -E 's/(pre|post)\.mjs/\1.js/g' $BINARYEN_BUILD/build.ninja

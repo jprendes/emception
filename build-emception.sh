@@ -9,7 +9,6 @@ fi
 
 SRC=$(realpath "$SRC")
 BUILD=$(realpath "$BUILD")
-EMCEPTION_BUILD=
 
 if [ ! -d $BUILD/emception/ ]; then
     mkdir -p $BUILD/emception/
@@ -27,10 +26,11 @@ cp $BUILD/binaryen/bin/binaryen-box.{mjs,wasm} $BUILD/emception/binaryen/
 mkdir -p $BUILD/emception/pyodide/
 cp $BUILD/pyodide/* $BUILD/emception/pyodide/
 
+mkdir -p $BUILD/emception/brotli/
+cp $BUILD/pyodide/* $BUILD/emception/brotli/
+
 mkdir -p $BUILD/emception/wasm-package/
 cp $BUILD/wasm-package/wasm-package.{mjs,wasm} $BUILD/emception/wasm-package/
 
-$SRC/packs/emscripten/package.sh $BUILD
-$SRC/packs/node/package.sh $BUILD
-$SRC/packs/usr_bin/package.sh $BUILD
-$SRC/packs/working/package.sh $BUILD
+$SRC/build-packs.sh $BUILD
+cp $BUILD/packs/root.pack $BUILD/emception

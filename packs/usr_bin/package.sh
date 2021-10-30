@@ -15,5 +15,5 @@ mkdir -p $BUILD/packs/usr_bin
 
 pushd $BUILD/packs/usr_bin
 $SRC/make.sh # builds files in the current working directory
-$BUILD/tooling/wasm-package pack $BUILD/emception/usr_bin.pack.txt $(find usr/)
+$BUILD/tooling/wasm-package pack $BUILD/packs/usr_bin/usr_bin.pack $(find usr/)
 popd
