@@ -37,5 +37,6 @@ cp $BUILD/packs/root.pack $BUILD/emception/
 
 brotli --best --keep $BUILD/emception/llvm/llvm-box.wasm
 brotli --best --keep $BUILD/emception/binaryen/binaryen-box.wasm
-brotli --best --keep $BUILD/emception/pyodide/binaryen-box.wasm
+brotli --best --keep $BUILD/emception/pyodide/pyodide.asm.wasm
+brotli --best --keep $BUILD/emception/pyodide/pyodide.asm.data
 brotli --best --keep $BUILD/emception/root.pack
