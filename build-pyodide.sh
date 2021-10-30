@@ -49,7 +49,7 @@ pushd $PYODIDE_SRC
 popd
 
 # Copy over the built files
-cp $PYODIDE_SRC/{packages.json,pyodide.asm.data,pyodide.asm.js,pyodide.asm.wasm,pyodide.mjs} $PYODIDE_BUILD
+cp $PYODIDE_SRC/build/{packages.json,pyodide.asm.data,pyodide.asm.js,pyodide.asm.wasm,pyodide.mjs} $PYODIDE_BUILD
 
 # Pyodide makes heavy use of globals due to the package loading mechanism.
 # That makes it so that we can't have two pyodides running in the same page.
