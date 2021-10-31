@@ -1,8 +1,10 @@
 #!/bin/bash
 
+CTX=$(mktemp)
 docker build \
     -t emception_build \
-    .
+    $CTX
+rmdir $CTX
 
 mkdir -p $(pwd)/build/emsdk_cache
 
