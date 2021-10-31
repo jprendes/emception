@@ -1,10 +1,13 @@
 #!/bin/bash
 
-CTX=$(mktemp -d)
+SRC=$(dirname $0)
+SRC=$(realpath "$SRC")
+
+pushd $SRC/docker
 docker build \
     -t emception_build \
-    $CTX
-rmdir $CTX
+    .
+popd
 
 mkdir -p $(pwd)/build/emsdk_cache
 
