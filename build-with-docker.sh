@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CTX=$(mktemp)
+CTX=$(mktemp -d)
 docker build \
     -t emception_build \
     $CTX
