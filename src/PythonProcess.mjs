@@ -65,7 +65,7 @@ class Pyodide {
     constructor(FS, pyodideOpts) {
         this._promise = (async () => {
             const wasm = FS.readFile("/wasm/pyodide.asm.wasm");
-            const data = FS.readFile("/wasm/pyodide.asm.data");
+            const data = FS.readFile("/wasm/pyodide.asm.data").buffer;
             const indexURL = (new URL("./pyodide/", import.meta.url)).pathname;
             this._python = await loadPyodide({
                 fullStdLib: false,
