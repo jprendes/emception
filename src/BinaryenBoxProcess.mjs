@@ -6,8 +6,8 @@ const wasm = fetch_buffer("./binaryen/binaryen-box.wasm");
 
 export default class BinaryenBoxProcess extends EmProcess {
     constructor() {
-        super(BinaryenBoxModule, wasm.then(wasm => ({
-            wasmBinary: new Uint8Array(wasm)
-        })));
+        super(BinaryenBoxModule, {
+            wasmBinary: FS.readFile("/wasm/binaryen-box.wasm")
+        });
     }
 };

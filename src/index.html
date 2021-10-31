@@ -41,11 +41,11 @@
         }
 
         const tools = {
-            "llvm-box": new LlvmBoxProcess(),
-            "binaryen-box": new BinaryenBoxProcess(),
-            "node": new NodeProcess(),
-            "python": new PythonProcess(),
-            "main-python": new PythonProcess(),
+            "llvm-box": new LlvmBoxProcess(FS),
+            "binaryen-box": new BinaryenBoxProcess(FS),
+            "node": new NodeProcess(FS),
+            "python": new PythonProcess(FS),
+            "main-python": new PythonProcess(FS),
         };
         window.tools = tools;
 

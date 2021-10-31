@@ -18,13 +18,13 @@ cp $SRC/src/* $BUILD/emception/
 cp $SRC/src/* $BUILD/emception/
 
 mkdir -p $BUILD/emception/llvm/
-cp $BUILD/llvm/bin/llvm-box.{mjs,wasm} $BUILD/emception/llvm/
+cp $BUILD/llvm/bin/llvm-box.mjs $BUILD/emception/llvm/
 
 mkdir -p $BUILD/emception/binaryen/
-cp $BUILD/binaryen/bin/binaryen-box.{mjs,wasm} $BUILD/emception/binaryen/
+cp $BUILD/binaryen/bin/binaryen-box.mjs $BUILD/emception/binaryen/
 
 mkdir -p $BUILD/emception/pyodide/
-cp $BUILD/pyodide/* $BUILD/emception/pyodide/
+cp $BUILD/pyodide/{packages.json,pyodide.asm.js,pyodide.mjs} $BUILD/emception/pyodide/
 
 mkdir -p $BUILD/emception/brotli/
 cp $BUILD/brotli/brotli.{mjs,wasm} $BUILD/emception/brotli/
@@ -35,8 +35,4 @@ cp $BUILD/wasm-package/wasm-package.{mjs,wasm} $BUILD/emception/wasm-package/
 $SRC/build-packs.sh $BUILD
 cp $BUILD/packs/root.pack $BUILD/emception/
 
-brotli --best --keep $BUILD/emception/llvm/llvm-box.wasm
-brotli --best --keep $BUILD/emception/binaryen/binaryen-box.wasm
-brotli --best --keep $BUILD/emception/pyodide/pyodide.asm.wasm
-brotli --best --keep $BUILD/emception/pyodide/pyodide.asm.data
 brotli --best --keep $BUILD/emception/root.pack

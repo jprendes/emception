@@ -1,9 +1,5 @@
 import Process from "./Process.mjs";
 import { loadPyodide } from "./pyodide/pyodide.mjs";
-import { fetch_buffer } from "./utils.js";
-
-const pyodide_wasm = fetch_buffer("./pyodide/pyodide.asm.wasm");
-const pyodide_data = fetch_buffer("./pyodide/pyodide.asm.data");
 
 function unique(arr) {
     return arr.filter((v, i) => {
@@ -66,17 +62,17 @@ function patch_process_run(python_process) {
 class Pyodide {
     _python = null;
 
-    constructor(pyodideOpts) {
+    constructor(FS, pyodideOpts) {
         this._promise = (async () => {
-            const wasm = await pyodide_wasm;
-            const data = await pyodide_data;
+            const wasm = FS.readFile("/wasm/pyodide.asm.wasm");
+            const data = FS.readFile("/wasm/pyodide.asm.data");
             const indexURL = (new URL("./pyodide/", import.meta.url)).pathname;
             this._python = await loadPyodide({
                 fullStdLib: false,
                 ...pyodideOpts,
                 indexURL,
-                stdout: (...args) => this.onprint,
-                stderr: (...args) => this.onprintErr,
+                stdout: (...args) => this.onprint(...args),
+                stderr: (...args) => this.onprintErr(...args),
             }, {
                 wasmBinary: new Uint8Array(wasm),
                 getPreloadedPackage: (pkg) => {
@@ -163,11 +159,11 @@ class Pyodide {
 export default class PythonProcess extends Process {
     _pyodide = null;
 
-    constructor(pyodideOpts = {}) {
+    constructor(FS, pyodideOpts = {}) {
         const conf = {};
         super(conf);
         this._promise = (async () => {
-            this._pyodide = await new Pyodide(pyodideOpts);
+            this._pyodide = await new Pyodide(FS, pyodideOpts);
             this._pyodide.onrunprocess = (...args) => this.onrunprocess(...args);
             conf.setFS(this._pyodide.FS);
             

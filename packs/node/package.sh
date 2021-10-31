@@ -10,7 +10,6 @@ fi
 SRC=$(realpath "$SRC")
 BUILD=$(realpath "$BUILD")
 
-mkdir -p $BUILD/emception
 mkdir -p $BUILD/packs/node
 
 pushd $BUILD/packs/node
