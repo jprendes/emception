@@ -24,7 +24,7 @@ mkdir -p $BUILD/emception/binaryen/
 cp $BUILD/binaryen/bin/binaryen-box.mjs $BUILD/emception/binaryen/
 
 mkdir -p $BUILD/emception/pyodide/
-cp $BUILD/pyodide/{packages.json,pyodide.asm.js,pyodide.mjs} $BUILD/emception/pyodide/
+cp $BUILD/pyodide/{pyodide.asm.mjs,pyodide.mjs} $BUILD/emception/pyodide/
 
 mkdir -p $BUILD/emception/brotli/
 cp $BUILD/brotli/brotli.{mjs,wasm} $BUILD/emception/brotli/
@@ -33,6 +33,5 @@ mkdir -p $BUILD/emception/wasm-package/
 cp $BUILD/wasm-package/wasm-package.{mjs,wasm} $BUILD/emception/wasm-package/
 
 $SRC/build-packs.sh $BUILD
-cp $BUILD/packs/root.pack $BUILD/emception/
-
-brotli --best --keep $BUILD/emception/root.pack
+brotli --best --keep $BUILD/packs/root.pack
+cp $BUILD/packs/root.pack.br $BUILD/emception/

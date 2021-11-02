@@ -1,5 +1,6 @@
 import Process from "./Process.mjs";
 import { loadPyodide } from "./pyodide/pyodide.mjs";
+import createPyodideModule from "./pyodide/pyodide.asm.mjs";
 
 function unique(arr) {
     return arr.filter((v, i) => {
@@ -65,20 +66,32 @@ class Pyodide {
     constructor(FS, pyodideOpts) {
         this._promise = (async () => {
             const wasm = FS.readFile("/wasm/pyodide.asm.wasm");
-            const data = FS.readFile("/wasm/pyodide.asm.data").buffer;
             const indexURL = (new URL("./pyodide/", import.meta.url)).pathname;
-            this._python = await loadPyodide({
+            const Module = {
+                preInit: () => {
+                    console.log(Module.FS);
+                    Module.FS.ErrnoError = FS.FS.ErrnoError;
+                    Module.FS.genericErrors = FS.FS.genericErrors;
+                    Module.FS.mkdirTree("/lib");
+                    // Use FS's PROXYFS rather than Module.FS's since Pyodide uses an older version
+                    // of Emscripten, with a bug in PROXYFS. See:
+                    // https://github.com/emscripten-core/emscripten/issues/12367
+                    Module.FS.mount(FS.FS.filesystems.PROXYFS, { root: "/lib", fs: FS.FS }, "/lib");
+                },
+                wasmBinary: new Uint8Array(wasm),
+            };
+            this._python = await loadPyodide(createPyodideModule, {
                 fullStdLib: false,
                 ...pyodideOpts,
                 indexURL,
                 stdout: (...args) => this.onprint(...args),
                 stderr: (...args) => this.onprintErr(...args),
             }, {
+                preInit: (...args) => {
+                    console.log(args);
+                },
+                noInitialRun: true,
                 wasmBinary: new Uint8Array(wasm),
-                getPreloadedPackage: (pkg) => {
-                    if (pkg === `${indexURL}pyodide.asm.data`) return data;
-                    return null;
-                }
             });
             this._python.runPython(`import sys`);
             this._python.runPython(`import os`);
