@@ -12,15 +12,10 @@ export default class NodeProcess extends Process {
     _promise = null;
 
     constructor() {
-        const conf = {};
-        super(conf);
-        this._promise = (async () => {
-            conf.setFS(await new FileSystem());
-            delete this.then;
-            return this;
-        })();
-
-        this.then = (...args) => this._promise.then(...args);
+        super((async () => {
+            const fs = await new FileSystem();
+            return fs.FS;
+        })());
     }
 
     async exec(args, opts = {}) {

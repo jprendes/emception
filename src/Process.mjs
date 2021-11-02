@@ -1,13 +1,15 @@
 export default class Process {
     _fs = null;
 
-    constructor(conf) {
-        conf.setFS = (fs) => {
-            if ("FS" in fs) {
-                this._fs = fs.FS;
-            } else {
-                this._fs = fs;
-            }
+    constructor(fs) {
+        this._fs = fs;
+        if (fs.then) {
+            const _promise = fs.then((fs_done) => {
+                this._fs = fs_done;
+                delete this.then;
+                return this;
+            });
+            this.then = (...args) => _promise.then(...args);
         }
     }
 
@@ -24,6 +26,18 @@ export default class Process {
     }
 
     mount(fs, root, mount = root) {
+        if (fs.then) {
+            return fs.then((fs_done) => {
+                return this.mount(fs_done, root, mount);
+            });
+        }
+
+        if (this.then) {
+            return this.then(() => {
+                return this.mount(fs, root, mount);
+            });
+        }
+
         if ("FS" in fs) {
             fs = fs.FS;
         }

@@ -63,13 +63,11 @@ function patch_process_run(python_process) {
 class Pyodide {
     _python = null;
 
-    constructor(FS, pyodideOpts) {
+    constructor(FS) {
         this._promise = (async () => {
             const wasm = FS.readFile("/wasm/pyodide.asm.wasm");
-            const indexURL = (new URL("./pyodide/", import.meta.url)).pathname;
             const Module = {
                 preInit: () => {
-                    console.log(Module.FS);
                     Module.FS.ErrnoError = FS.FS.ErrnoError;
                     Module.FS.genericErrors = FS.FS.genericErrors;
                     Module.FS.mkdirTree("/lib");
@@ -82,17 +80,9 @@ class Pyodide {
             };
             this._python = await loadPyodide(createPyodideModule, {
                 fullStdLib: false,
-                ...pyodideOpts,
-                indexURL,
                 stdout: (...args) => this.onprint(...args),
                 stderr: (...args) => this.onprintErr(...args),
-            }, {
-                preInit: (...args) => {
-                    console.log(args);
-                },
-                noInitialRun: true,
-                wasmBinary: new Uint8Array(wasm),
-            });
+            }, Module);
             this._python.runPython(`import sys`);
             this._python.runPython(`import os`);
             this._python.runPython(`import subprocess`);
@@ -173,18 +163,12 @@ export default class PythonProcess extends Process {
     _pyodide = null;
 
     constructor(FS, pyodideOpts = {}) {
-        const conf = {};
-        super(conf);
-        this._promise = (async () => {
-            this._pyodide = await new Pyodide(FS, pyodideOpts);
+        super((async () => {
+            const _pyodide = await new Pyodide(FS, pyodideOpts);
+            this._pyodide = _pyodide;
             this._pyodide.onrunprocess = (...args) => this.onrunprocess(...args);
-            conf.setFS(this._pyodide.FS);
-            
-            delete this.then;
-            return this;
-        })();
-
-        this.then = (...args) => this._promise.then(...args);
+            return this._pyodide.FS;
+        })());
     }
 
     onrunprocess = () => ({ returncode: 1, stdout: "", stderr: "Not implemented" });
