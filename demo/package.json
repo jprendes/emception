@@ -1,0 +1,28 @@
+{
+    "name": "emception",
+    "scripts": {
+        "build": "webpack --mode=production --stats-children"
+    },
+    "devDependencies": {
+        "comlink": "^4.3.1",
+        "compression-webpack-plugin": "^9.0.0",
+        "copy-webpack-plugin": "^9.0.1",
+        "css-loader": "^6.5.0",
+        "html-webpack-plugin": "^5.3.2",
+        "lit": "^2.0.0-rc.4",
+        "local-echo": "github:wavesoft/local-echo",
+        "monaco-editor": "^0.29.1",
+        "monaco-editor-webpack-plugin": "^5.0.0",
+        "style-loader": "^3.3.1",
+        "webpack": "^5.52.1",
+        "webpack-cli": "^4.8.0",
+        "webpack-dev-server": "^3.11.2",
+        "webpack-mode": "^1.1.0",
+        "worker-loader": "^3.0.8",
+        "xterm": "^4.14.1",
+        "xterm-addon-fit": "^0.5.0"
+    },
+    "dependencies": {
+        "split-grid": "^1.0.11"
+    }
+}

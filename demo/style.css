@@ -1,0 +1,213 @@
+html, body {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 100% 0;
+    grid-template-rows: 100% 0;
+    overflow: hidden;
+}
+
+#layout {
+    display: grid;
+    grid-template-columns: 1fr 10px 1fr;
+    grid-template-rows: 50px 1fr 10px 0.5fr auto;
+    grid-template-areas:
+        "header header header"
+        "editor vgutter preview"
+        "hgutter hgutter hgutter"
+        "output output output";
+}
+
+#header {
+    grid-area: header;
+    background-color: #252525;
+    color: #d4d4d4;
+    font-size: 30px;
+    font-family: Roboto, sans-serif;
+    display: grid;
+    align-items: center;
+    padding: 0 10px;
+    box-shadow: 0 -5px 5px 5px #000;
+    z-index: 999;
+    grid-template-columns: auto 1fr 2fr auto;
+    grid-template-rows: auto;
+    grid-template-areas: "title . flags compile";
+}
+
+#flags {
+    grid-area: flags;
+}
+
+#title {
+    grid-area: title;
+}
+
+#compile {
+    grid-area: compile;
+}
+
+#preview {
+    grid-area: preview;
+}
+
+#editor {
+    grid-area: editor;
+}
+
+#hgutter {
+    grid-area: hgutter;
+    cursor: row-resize;
+}
+
+#vgutter {
+    grid-area: vgutter;
+    cursor: col-resize;
+}
+
+#flags {
+    margin: 10px;
+    font-family: "Droid Sans Mono", "monospace", monospace, "Droid Sans Fallback";
+    font-size: 0.4em;
+    padding: 5px;
+    background: #1e1e1e;
+    border: 1px solid #454545;
+    color: #d4d4d4;
+    border-radius: 3px;
+}
+
+#output {
+    grid-area: output;
+    display: grid;
+    grid-template-columns: 1fr minmax(0, auto);
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-areas:
+        "terminal"
+        "status";
+}
+
+#terminal {
+    grid-area: terminal;
+}
+
+#status {
+    grid-area: status;
+}
+
+#editor,
+#terminal,
+#output {
+    overflow: hidden;
+}
+
+#editor > div,
+#terminal > div {
+    height: 100%;
+}
+
+#terminal {
+    padding: 5px;
+    padding-right: 0;
+    background-color: #1e1e1e;
+}
+
+#compile {
+    border: 1px solid #858585;
+    background: #454545;
+    color: #cfcfcf;
+    font-size: 15px;
+    padding: 5px 10px;
+    border-radius: 3px;
+}
+
+#compile[disabled] {
+    opacity: 50%;
+}
+
+#preview-frame {
+    border: none;
+    width: 100%;
+    height: 100%;
+}
+
+#status {
+    font-family: "Droid Sans Mono", "monospace", monospace, "Droid Sans Fallback";
+    background: #1e1e1e;
+    color: #d4d4d4;
+    border-top: 1px solid #393939;
+    padding: 3px;
+    font-size: 0.8em;
+    overflow: hidden;
+    width: 100%;
+}
+
+#status .process-status {
+    padding-left: 10px;
+}
+
+#status .process-argv {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+#vgutter,
+#hgutter {
+    background: #252525;
+    display: grid;
+    align-items: center;
+    justify-items: center;
+}
+
+#vgutter:hover,
+#hgutter:hover {
+    background: #303030;
+}
+
+#vgutter:after,
+#hgutter:after {
+    content: "";
+    display: block;
+    width: 5px;
+    height: 5px;
+    background: #858585;
+    border-radius: 2.5px;
+    position: absolute;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+    z-index: 998;
+}
+
+#vgutter:hover:after,
+#hgutter:hover:after {
+    background: #A0A0A0;
+}
+
+#vgutter:after {
+    height: 30px;
+}
+
+#hgutter:after {
+    width: 30px;
+}
+
+.xterm,
+.xterm-viewport {
+    width: 100% !important;
+    height: 100% !important;
+    box-sizing: border-box;
+}
+
+.xterm-viewport::-webkit-scrollbar {
+    width: 10px;
+}
+
+.xterm-viewport::-webkit-scrollbar-track {
+    opacity: 0;
+}
+.xterm-viewport::-webkit-scrollbar-thumb {
+    min-height: 20px;
+    background-color: #ffffff20;
+}
