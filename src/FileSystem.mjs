@@ -1,22 +1,15 @@
 import EmProcess from "./EmProcess.mjs";
 import WasmPackageModule from "./wasm-package/wasm-package.mjs";
-import { fetch_buffer } from "./utils.js";
+import { fetch_buffer, fetch_buffer_view } from "./utils.js";
 import BrotliProcess from "./BrotliProcess.mjs";
 
-const wasm = fetch_buffer("./wasm-package/wasm-package.wasm");
+const wasmBinary = fetch_buffer_view("./wasm-package/wasm-package.wasm");
 
 export default class FileSystem extends EmProcess {
     _brotli = null;
-    constructor() {
-        super(WasmPackageModule, wasm.then(wasm => ({
-            wasmBinary: new Uint8Array(wasm)
-        })));
-        this._brotli = (async () => {
-            const brotli = await new BrotliProcess();
-            await this;
-            brotli.mount(this.FS, "/tmp");
-            return brotli;
-        })();
+    constructor(opts) {
+        super(WasmPackageModule, { ...opts, wasmBinary });
+        this._brotli = (async () => new BrotliProcess({ FS: (await this).FS }))();
     }
 
     async unpack(...urls) {

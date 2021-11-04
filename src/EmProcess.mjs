@@ -1,4 +1,5 @@
 import Process from "./Process.mjs";
+import shareFS from "./SHAREDFS.mjs";
 
 export default class EmProcess extends Process {
     _module = null;
@@ -7,19 +8,26 @@ export default class EmProcess extends Process {
     _print = (...args) => console.log(...args);
     _printErr = (...args) => console.warn(...args);
 
-    constructor(Module, opts = {}) {
-        super((async () => {
-            const _module = await new Module({
-                ...(await opts),
-                noInitialRun: true,
-                noExitRuntime: true,
-                print: (...args) => this._print(...args),
-                printErr: (...args) => this._printErr(...args),
-            });
-            this._module = _module;
-            this._memory = Uint8Array.from(this._module.HEAPU8.slice(0, this._module.HEAPU8.length));
-            return this._module.FS;
-        })());
+    constructor(Module, opts_ = {}) {
+        const { FS, ...opts } = opts_;
+        super({
+            ...opts,
+            FS: (async () => {
+                const _mod = {
+                    ...opts,
+                    wasmBinary: await opts.wasmBinary,
+                    noInitialRun: true,
+                    noExitRuntime: true,
+                    print: (...args) => this._print(...args),
+                    printErr: (...args) => this._printErr(...args),
+                    preInit: () => FS && shareFS(FS, _mod)
+                };
+                const _module = await new Module(_mod);
+                this._module = _module;
+                this._memory = Uint8Array.from(this._module.HEAPU8.slice(0, this._module.HEAPU8.length));
+                return this._module.FS;
+            })()
+        });
     }
 
     exec(args, opts = {}) {
@@ -45,8 +53,16 @@ export default class EmProcess extends Process {
         const stdout = [];
         const stderr = [];
 
-        this._print = opts.print || ((...args) => stdout.push(...args));
-        this._printErr = opts.printErr || ((...args) => stderr.push(...args));
+        this._print = (...args) => {
+            this.onprint(...args);
+            opts.print && opts.print(...args);
+            stdout.push(...args);
+        };
+        this._printErr = (...args) => {
+            this.onprintErr(...args);
+            opts.printErr && opts.printErr(...args);
+            stderr.push(...args);
+        };
 
         try {
             if (opts.cwd) this.cwd = opts.cwd;

@@ -1,13 +1,11 @@
 import EmProcess from "./EmProcess.mjs";
 import BrotliModule from "./brotli/brotli.mjs";
-import { fetch_buffer } from "./utils.js";
+import { fetch_buffer_view } from "./utils.js";
 
-const wasm = fetch_buffer("./brotli/brotli.wasm");
+const wasmBinary = fetch_buffer_view("./brotli/brotli.wasm");
 
 export default class BrotliProcess extends EmProcess {
-    constructor() {
-        super(BrotliModule, wasm.then(wasm => ({
-            wasmBinary: new Uint8Array(wasm)
-        })));
+    constructor(opts) {
+        super(BrotliModule, { ...opts, wasmBinary });
     }
 };

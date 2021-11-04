@@ -9,13 +9,12 @@ function unique(arr) {
 }
 
 export default class NodeProcess extends Process {
-    _promise = null;
-
-    constructor() {
-        super((async () => {
-            const fs = await new FileSystem();
-            return fs.FS;
-        })());
+    constructor(opts_) {
+        const { FS, ...opts } = opts_;
+        // This is not an Emscripten based process.
+        // Create a simple Emscripten base process to use its FS.
+        const fs = new FileSystem({ FS });
+        super({ ...opts, FS: fs.then((p) => p.FS) });
     }
 
     async exec(args, opts = {}) {
@@ -24,8 +23,16 @@ export default class NodeProcess extends Process {
         const stdout = [];
         const stderr = [];
 
-        const print = opts.print || ((...args) => stdout.push(...args));
-        const printErr = opts.printErr || ((...args) => stderr.push(...args));
+        const print = (...args) => {
+            this.onprint(...args);
+            opts.print && opts.print(...args);
+            stdout.push(...args);
+        };
+        const printErr = (...args) => {
+            this.onprintErr(...args);
+            opts.printErr && opts.printErr(...args);
+            stderr.push(...args);
+        };
 
         // The following code is VERY VERY hacky, I'm sorry.
 
@@ -272,7 +279,7 @@ export default class NodeProcess extends Process {
                 return this.FS.readFile(path, { encoding: "utf8" });
             },
             createWriteStream: (path, opts = {}) => {
-                if ((("string" === typeof opts) && opts !== "w") || (opts.flags && opts.flags !== "w")) {
+                if (!((("string" === typeof opts) && opts !== "w") || (opts && opts.flags && opts.flags !== "w"))) {
                     this.FS.writeFile(path, "");
                 }
                 return {

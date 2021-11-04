@@ -24,32 +24,37 @@
             console.log(...args);
         };
 
-        const FS = await new FileSystem();
-        globalThis.FS = FS;
+        const sharedFileSystem = await new FileSystem();
+        globalThis.FS = sharedFileSystem;
 
-        await FS.unpack("./root.pack.br");
+        await sharedFileSystem.unpack("./root.pack.br");
 
-        FS.persist("/emscripten/cache");
-        await FS.pull();
+        sharedFileSystem.persist("/emscripten/cache");
+        await sharedFileSystem.pull();
 
-        if (FS.exists("/emscripten/cache/cache.lock")) {
-            FS.unlink("/emscripten/cache/cache.lock");
+        if (sharedFileSystem.exists("/emscripten/cache/cache.lock")) {
+            sharedFileSystem.unlink("/emscripten/cache/cache.lock");
         }
 
         function sleep(s) {
             return new Promise((resolve) => setTimeout(resolve, s));
         }
 
+        const processConfig = {
+            FS: sharedFileSystem.FS,
+            onrunprocess: run_process,
+        };
+
         const tools = {
-            "llvm-box": new LlvmBoxProcess(FS),
-            "binaryen-box": new BinaryenBoxProcess(FS),
-            "node": new NodeProcess(FS),
-            "python": new PythonProcess(FS),
-            "main-python": new PythonProcess(FS),
+            "llvm-box": new LlvmBoxProcess(processConfig),
+            "binaryen-box": new BinaryenBoxProcess(processConfig),
+            "node": new NodeProcess(processConfig),
+            "python": new PythonProcess(processConfig),
+            "main-python": new PythonProcess(processConfig),
         };
         window.tools = tools;
 
-        const run_process = async (argv, opts = {}) => {
+        async function run_process(argv, opts = {}) {
             await sleep(100);
 
             debug_log(argv);
@@ -59,7 +64,7 @@
                 argv[0] = `/emscripten/${in_emscripten[1]}.py`;
             }
 
-            if (!FS.exists(argv[0])) {
+            if (!sharedFileSystem.exists(argv[0])) {
                 const result = {
                     returncode: 1,
                     stdout: "",
@@ -69,7 +74,7 @@
                 return result;
             }
 
-            const tool_info = argv[0].endsWith(".py") ? "python" : FS.readFile(argv[0], {encoding: "utf8"});
+            const tool_info = argv[0].endsWith(".py") ? "python" : sharedFileSystem.readFile(argv[0], {encoding: "utf8"});
             const [tool_name, ...extra_args] = tool_info.split(";")
 
             if (!(tool_name in tools)) {
@@ -91,17 +96,10 @@
                 cwd: opts.cwd || "/",
                 path: ["/emscripten"]
             });
-            await FS.push();
+            await sharedFileSystem.push();
             debug_log(result);
             return result;
         };
-
-        for (let tool of Object.values(tools)) {
-            tool.then((tool) => {
-                if ("onrunprocess" in tool) tool.onrunprocess = run_process;
-                tool.mount(FS, ["/tmp", "/working", "/emscripten", "/usr/bin", "/node"]);
-            });
-        }
 
         window.run_emcc = async (...args) => {
             await tools["main-python"];
@@ -110,8 +108,6 @@
             return await tools["main-python"].exec(args, {
               cwd: "/working",
               path: ["/emscripten"],
-              //print: (...args) => console.log(...args),
-              //printErr: (...args) => console.error(...args),
             })
         };
         console.log(`run_emcc("em++ -c main.cpp -o main.o")`);

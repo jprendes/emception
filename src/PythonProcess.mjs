@@ -1,6 +1,7 @@
 import Process from "./Process.mjs";
 import { loadPyodide } from "./pyodide/pyodide.mjs";
 import createPyodideModule from "./pyodide/pyodide.asm.mjs";
+import shareFS from "./SHAREDFS.mjs";
 
 function unique(arr) {
     return arr.filter((v, i) => {
@@ -8,11 +9,16 @@ function unique(arr) {
     });
 }
 
-function patch_process_run(python_process) {
-    const run = async (...args) => {
-        const [argv, opts = {}] = args.map(a => a.toJs ? a.toJs() : a);
+function patch_python(python_process) {
+    python_process._python.globals.get("warnings").warn = () => {}
+
+    const run = async (argv, opts = {}) => {
         if (opts.env) opts.env = opts.env.toJs();
         opts.cwd = opts.cwd || python_process.FS.cwd();
+        if ("undefined" === typeof opts.stdout) {
+            opts.print = (...args) => python_process.onprint(...args);
+            opts.printErr = (...args) => python_process.onprintErr(...args);
+        }
         const result = await python_process.onrunprocess(argv, opts);
         if (opts.stdout && opts.stdout.type == "_io.TextIOWrapper" && opts.stdout.name) {
             python_process.FS.writeFile(opts.stdout.name, result.stdout);
@@ -22,15 +28,19 @@ function patch_process_run(python_process) {
         }
         return result;
     }
-    python_process._python.globals.get("subprocess").run = (...args) => run(...args);
-    python_process._python.globals.get("subprocess").run.sync = true;
 
-    python_process._python.globals.get("subprocess").Popen_impl = async (...args) => {
-        const { stdout, stderr, returncode } = await run(...args);
+    python_process._python.globals.get("subprocess").Popen_impl = async (argv, opts = {}) => {
+        if (argv.toJs) argv = argv.toJs();
+        if (opts.toJs) opts = opts.toJs();
+        const { stdout, stderr, returncode } = await run(argv, opts);
+        const text_mode = opts.universal_newlines || opts.encoding || opts.errors;
+        const outstream = text_mode ? stdout : { decode: () => stdout };
+        const errstream = text_mode ? stderr : { decode: () => stderr };
         return {
-            poll: () => true,
-            communicate: () => [{decode: () => stdout}, {decode: () => stderr}],
+            poll: () => returncode,
+            communicate: (/* input */) => [outstream, errstream],
             wait: () => returncode,
+            kill: () => { /* not implemented */ },
             returncode,
         }
     }
@@ -40,7 +50,9 @@ function patch_process_run(python_process) {
         class Popen(object):
             js = None;
             returncode = 0;
+            args = [];
             def __init__(self, *args, **kwargs):
+                self.args = args[0];
                 self.js = subprocess.Popen_impl(*args, **kwargs);
                 self.returncode = self.js.returncode;
             def __enter__(self):
@@ -63,18 +75,12 @@ function patch_process_run(python_process) {
 class Pyodide {
     _python = null;
 
-    constructor(FS) {
+    constructor(opts) {
         this._promise = (async () => {
-            const wasm = FS.readFile("/wasm/pyodide.asm.wasm");
+            const wasm = opts.FS.readFile("/wasm/pyodide.asm.wasm");
             const Module = {
                 preInit: () => {
-                    Module.FS.ErrnoError = FS.FS.ErrnoError;
-                    Module.FS.genericErrors = FS.FS.genericErrors;
-                    Module.FS.mkdirTree("/lib");
-                    // Use FS's PROXYFS rather than Module.FS's since Pyodide uses an older version
-                    // of Emscripten, with a bug in PROXYFS. See:
-                    // https://github.com/emscripten-core/emscripten/issues/12367
-                    Module.FS.mount(FS.FS.filesystems.PROXYFS, { root: "/lib", fs: FS.FS }, "/lib");
+                    shareFS(opts.FS, Module);
                 },
                 wasmBinary: new Uint8Array(wasm),
             };
@@ -86,7 +92,8 @@ class Pyodide {
             this._python.runPython(`import sys`);
             this._python.runPython(`import os`);
             this._python.runPython(`import subprocess`);
-            patch_process_run(this);
+            this._python.runPython(`import warnings`);
+            patch_python(this);
             
             delete this.then;
             return this;
@@ -96,7 +103,6 @@ class Pyodide {
     }
 
     onrunprocess = () => ({ returncode: 1, stdout: "", stderr: "Not implemented" });
-
     onprint = (...args) => console.log(...args);
     onprintErr = (...args) => console.error(...args);
 
@@ -162,16 +168,13 @@ class Pyodide {
 export default class PythonProcess extends Process {
     _pyodide = null;
 
-    constructor(FS, pyodideOpts = {}) {
-        super((async () => {
-            const _pyodide = await new Pyodide(FS, pyodideOpts);
-            this._pyodide = _pyodide;
-            this._pyodide.onrunprocess = (...args) => this.onrunprocess(...args);
-            return this._pyodide.FS;
-        })());
+    constructor(opts_) {
+        const { FS, ...opts } = opts_;
+        const pyodide = new Pyodide({ FS });
+        super({ ...opts, FS: pyodide.then((p) => p.FS) });
+        this._pyodide = pyodide;
+        pyodide.onrunprocess = (...args) => this.onrunprocess(...args);
     }
-
-    onrunprocess = () => ({ returncode: 1, stdout: "", stderr: "Not implemented" });
 
     async exec(args, opts) {
         if ((typeof args) === "string") args = args.split(/ +/g);
@@ -181,8 +184,16 @@ export default class PythonProcess extends Process {
         const stdout = [];
         const stderr = [];
 
-        this._pyodide.onprint = opts.print || ((...args) => stdout.push(...args));
-        this._pyodide.onprintErr = opts.printErr || ((...args) => stderr.push(...args));
+        this._pyodide.onprint = (...args) => {
+            this.onprint(...args);
+            opts.print && opts.print(...args);
+            stdout.push(...args);
+        };
+        this._pyodide.onprintErr = (...args) => {
+            this.onprintErr(...args);
+            opts.printErr && opts.printErr(...args);
+            stderr.push(...args);
+        };
 
         const env = this._pyodide.env;
         const globals = this._pyodide.globals;
@@ -195,27 +206,32 @@ export default class PythonProcess extends Process {
             if (opts.cwd) this.cwd = opts.cwd;
             await this._pyodide.eval(`
                 import sys
+                exit_err = None;
+                other_err = None;
                 try:
                     sys.argv = ${JSON.stringify(args)};
                     __name__ = '__main__';
                     exec(open(sys.argv[0]).read());
                 except SystemExit as err:
-                    if err.code == 0:
-                        pass;
-                    else:
-                        raise;
+                    exit_err = err;
+                except:
+                    other_err = sys.exc_info()[1];
                 `);
+            const exit_err = this._pyodide._python.globals.get("exit_err");
+            const other_err = this._pyodide._python.globals.get("other_err");
             return {
-                returncode: 0,
-                stdout: stdout.join(""),
-                stderr: stderr.join(""),
+                returncode: exit_err ? exit_err.code : (other_err ? 42 : ""),
+                stdout: stdout.join("\n"),
+                stderr: stderr.join("\n") + (other_err ? "\n\n" + other_err.toString() : ""),
             }
         } catch (err) {
+            // Exit due to an unexpected exception.
+            // Should never happen!
             return {
-                returncode: 1,
-                stdout: stdout.join(""),
-                stderr: stderr.join("") + "\n\n" + err,
-            }
+                returncode: 42,
+                stdout: stdout.join("\n"),
+                stderr: stderr.join("\n") + "\n\n" + err,
+            };
         } finally {
             this.cwd = cwd;
             this._pyodide.path = path;
