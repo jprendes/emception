@@ -114,11 +114,13 @@ export default (MAINFS, Module) => {
             }
         },
         lookupPath: function (path, opts) {
+            let result;
             if (!shouldShare(path)) {
-                return VFS.lookupPath(path, opts);
+                result = VFS.lookupPath(path, opts);
             } else {
-                return MAINFS.lookupPath(path, opts);
+                result = MAINFS.lookupPath(path, opts);
             }
+            return Object.assign(result, result.node);
             // let st = MAINFS.lstat(path);
             // var mode = st.mode;
             // return { path: path, id: st.ino, mode: mode, node: { mode: mode } };
