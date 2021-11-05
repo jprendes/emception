@@ -10,6 +10,7 @@ PYODIDE_SRC="$1"
 
 if [ "$PYODIDE_SRC" == "" ]; then
     echo "Usage: make.sh /path/to/source/of/pyodide/"
+    exit 1
 fi
 
 SRC=$(realpath "$SRC")
