@@ -115,7 +115,7 @@ async function main() {
 
     const status = document.getElementById("status");
     const statusElements = [];
-    emception.onprocessstart = Comlink.proxy((argv) => {
+    const onprocessstart = (argv) => {
         const lastEl = statusElements[statusElements.length - 1] || status;
         const newEl = document.createElement("div");
         newEl.className = "process-status";
@@ -129,8 +129,8 @@ async function main() {
         requestAnimationFrame(() => {
             terminalFitAddon.fit();
         });
-    });
-    emception.onprocessend = Comlink.proxy(() => {
+    };
+    const onprocessend = () => {
         const lastEl = statusElements.pop();
         if (lastEl) lastEl.remove();
 
@@ -138,7 +138,9 @@ async function main() {
         requestAnimationFrame(() => {
             terminalFitAddon.fit();
         });
-    });
+    };
+    emception.onprocessstart = Comlink.proxy(onprocessstart);
+    emception.onprocessend = Comlink.proxy(onprocessend);
 
     const compile = document.getElementById("compile");
     compile.addEventListener("click", async () => {
@@ -150,6 +152,7 @@ async function main() {
             terminal.reset();
             await emception.fileSystem.writeFile("/working/main.cpp", editor.getValue());
             const cmd = `em++ ${flags.value} -s SINGLE_FILE=1 main.cpp -o main.html`;
+            onprocessstart(`/emscripten/${cmd}`.split(/\s+/g));
             terminal.write(`$ ${cmd}\n\n`);
             const result = await emception.run(cmd);
             terminal.write("\n");
