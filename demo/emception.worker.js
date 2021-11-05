@@ -17,10 +17,10 @@ class Emception {
         const fileSystem = await new FileSystem();
         this.fileSystem = fileSystem;
 
-        await fileSystem.unpack(root_pack_url);
-
         fileSystem.persist("/emscripten/cache");
         await fileSystem.pull();
+        await fileSystem.unpack(root_pack_url);
+        await fileSystem.push();
       
         if (fileSystem.exists("/emscripten/cache/cache.lock")) {
             fileSystem.unlink("/emscripten/cache/cache.lock");
