@@ -25,7 +25,7 @@ if [ ! -d $BINARYEN_SRC/ ]; then
 
     # This is the last tested commit of binaryen.
     # Feel free to try with a newer version
-    git reset --hard ef686a4d932b9b86edc34a3b9b15926f943f6f7b
+    git reset --hard 0fe26e71ac1c5b22b990ea9b73131b49b1e9e22a
 
     popd
 fi
