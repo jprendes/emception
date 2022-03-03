@@ -3,7 +3,7 @@
 # Building with 2.0.32 seems to fail with `undefined symbol wait4`, so use 2.0.31 instead.
 # It might be related to this change: https://github.com/emscripten-core/emscripten/commit/be2fe9cdf2d6b7b9d0fc375177b9a18a2810fca4
 # Probably it's `define`d as a different symbol.
-FROM emscripten/emsdk:latest
+FROM emscripten/emsdk:3.1.6
 
 # clang-12 is most recent version of clang in base image.
 RUN apt update && apt install -y docker.io clang-12 ninja-build jq brotli
