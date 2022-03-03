@@ -47,7 +47,9 @@ fi
 cmake --build $LLVM_NATIVE/ -- llvm-tblgen clang-tblgen
 
 if [ ! -d $LLVM_BUILD/ ]; then
-    LDFLAGS="-s ALLOW_MEMORY_GROWTH=1 -s EXPORTED_FUNCTIONS=_main,_free,_malloc -s EXPORTED_RUNTIME_METHODS=FS,PROXYFS,allocateUTF8 -lproxyfs.js" emcmake cmake -G Ninja \
+    CXXFLAGS="-Dwait4=__syscall_wait4" \
+    LDFLAGS="-s LLD_REPORT_UNDEFINED=1 -s ALLOW_MEMORY_GROWTH=1 -s EXPORTED_FUNCTIONS=_main,_free,_malloc -s EXPORTED_RUNTIME_METHODS=FS,PROXYFS,allocateUTF8 -lproxyfs.js" \
+    emcmake cmake -G Ninja \
         -S $LLVM_SRC/llvm/ \
         -B $LLVM_BUILD/ \
         -DCMAKE_BUILD_TYPE=Release \
