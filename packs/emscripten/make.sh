@@ -8,9 +8,9 @@ fi
 SRC=$(dirname $0)
 SRC=$(realpath "$SRC")
 
-# We use here 2.0.31 since that's what it's been tested with.
+# We use here 3.1.6 since that's the latest tag it's been tested with.
 # Feel free to try a newer version
-curl --silent --output emscripten.zip https://codeload.github.com/emscripten-core/emscripten/zip/refs/tags/2.0.31
+curl --silent --output emscripten.zip --location https://github.com/emscripten-core/emscripten/archive/refs/tags/3.1.6.zip
 unzip -q emscripten.zip
 rm emscripten.zip
 mv emscripten-* emscripten
@@ -20,6 +20,7 @@ pushd emscripten/
 cp $SRC/config ./.emscripten
 
 # We won't support closure-compiler, remove it from the dependencies
+ls -alh .
 cat package.json | \
     jq '. | del(.dependencies["google-closure-compiler"])' \
     > _package.json
