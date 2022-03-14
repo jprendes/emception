@@ -86,7 +86,7 @@ if [ ! -d $LLVM_BUILD/ ]; then
         $LLVM_BUILD/build.ninja \
         llvm-box \
         $BUILD/tooling \
-        clang-14 lld llvm-nm llvm-ar llvm-objcopy llc \
+        clang-15 lld llvm-nm llvm-ar llvm-objcopy llc \
         > $TMP_FILE
     cat $TMP_FILE >> $LLVM_BUILD/build.ninja
     popd
