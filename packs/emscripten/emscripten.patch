@@ -1,0 +1,13 @@
+diff --git a/emscripten/tools/shared.py b/emscripten/tools/shared.py
+index 2d9b814..7307bb9 100644
+--- a/emscripten/tools/shared.py
++++ b/emscripten/tools/shared.py
+@@ -397,7 +397,7 @@ def check_sanity(force=False):
+   with Cache.lock():
+     if os.path.exists(sanity_file):
+       sanity_data = utils.read_file(sanity_file)
+-      if sanity_data != expected:
++      if False and sanity_data != expected:
+         logger.debug('old sanity: %s' % sanity_data)
+         logger.debug('new sanity: %s' % expected)
+         logger.info('(Emscripten: config changed, clearing cache)')

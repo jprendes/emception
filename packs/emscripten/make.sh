@@ -26,6 +26,9 @@ cat package.json | \
     > _package.json
 mv _package.json package.json
 
+# Patch emscripten to avoid invalidating the cache
+patch -p2 < $SRC/emscripten.patch
+
 # Install dependencies (but nor development dependencies)
 npm i --only=prod
 
@@ -42,5 +45,9 @@ rm -Rf \
     ./third_party/websockify \
     ./tools/websocket_to_posix_proxy \
     ./*.bat
+
+CONTAINER_ID=$(docker create emscripten/emsdk:3.1.6)
+docker cp $CONTAINER_ID:/emsdk/upstream/emscripten/cache ./cache
+docker rm $CONTAINER_ID
 
 popd
