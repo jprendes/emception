@@ -192,7 +192,7 @@ async function main() {
     status.textContent = "Iddle";
     compile.disabled = false;
     compile.textContent = "Compile!";
-    preview(previewTemplate("", "", "Your compiled code will run here"));
+    preview(previewTemplate("", "", "<div>Your compiled code will run here.</div><div>Click <div style=\"display: inline-block;border: 1px solid #858585;background: #454545;color: #cfcfcf;font-size: 15px;padding: 5px 10px;border-radius: 3px;\">Compile!</div> above to start.</div>"));
 }
 
 main();
