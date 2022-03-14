@@ -27,6 +27,9 @@ if [ ! -d $BINARYEN_SRC/ ]; then
     # Feel free to try with a newer version
     git reset --hard 0fe26e71ac1c5b22b990ea9b73131b49b1e9e22a
 
+    git submodule init
+    git submodule update
+
     popd
 fi
 
