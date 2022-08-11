@@ -10,7 +10,7 @@ cd emception
 ./build-with-docker.sh
 ```
 
-This will generate the files in `build/emception`. To build de demo, from the `demo` folder run `npm install` and `npm run build`. You can then run the demo locally running `npx serve build/demo`.
+This will generate the files in `build/emception`. To build the demo, from the `demo` folder run `npm install` and `npm run build`. You can then run the demo locally running `npx serve build/demo`.
 ```bash
 pushd demo
 npm install
@@ -75,7 +75,7 @@ int main(int argc, char const ** argv) {
     return 1;
 }
 ```
-Everythin can then be linked together:
+Everything can then be linked together:
 ```
 em++ dispatching_main.cpp executable_a_transformed.o executable_b_transformed.o -o bundled_executables.mjs
 ```
