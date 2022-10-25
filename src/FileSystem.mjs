@@ -67,7 +67,7 @@ export default class FileSystem extends EmProcess {
     }
 
     push() {
-        new Promise((resolve, reject) => this.FS.syncfs(false, function (err) {
+        return new Promise((resolve, reject) => this.FS.syncfs(false, function (err) {
             if (err) {
                 reject(err);
             } else {

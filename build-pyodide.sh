@@ -26,7 +26,7 @@ if [ ! -d $PYODIDE_SRC/ ]; then
 
     # This is the last tested commit of jprendes/pyodide.
     # Feel free to try with a newer version
-    git reset --hard 7698df5529cc37f6f538f4d841c03bb47c1cec9e
+    git reset --hard 684116175b47299c630f830032d2903b48a87603
 
     # Pyodide makes heavy use of globals due to the package loading mechanism.
     # That makes it so that we can't have two pyodides running in the same page.
