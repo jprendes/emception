@@ -79,11 +79,32 @@ void process_wasm_file(std::string_view input_file_name, std::string_view output
             symbol.flags.hidden = true;
         }
 
+        // In recent versions of Emscripten the symbol
+        // for the `main` function will have differente
+        // names depending on wether argc/argv are taken as
+        // parameters or not.
+        SymbolInformation * main = nullptr;
         for (auto & symbol : symbol_table.symbols) {
-            if (symbol.name && *symbol.name == "main") {
-                *symbol.name += "_" + hash(input_file_name);
-                std::cout << "entrypoint " << *symbol.name << "\n";
+            if (!symbol.name) continue;
+            auto &name = *symbol.name;
+            
+            if (name == "main") {
+                main = &symbol;
+            } else if (!main && name == "__main_argc_argv") {
+                main = &symbol;
             }
+            
+            if (name == "main"
+                || name == "__main_argc_argv"
+                || name == "__main_void"
+                || name == "__original_main"
+            ) {
+                name += "_" + hash(input_file_name);
+            }
+        }
+
+        if (main) {
+            std::cout << "entrypoint " << *main->name << "\n";
         }
 
         for (auto & subsection : linking.subsections) {
