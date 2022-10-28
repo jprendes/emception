@@ -25,7 +25,7 @@ if [ ! -d $BINARYEN_SRC/ ]; then
 
     # This is the last tested commit of binaryen.
     # Feel free to try with a newer version
-    git reset --hard 0fe26e71ac1c5b22b990ea9b73131b49b1e9e22a
+    git reset --hard 8ab8e40d15a4d9f28ced76d28232f9e791f161d3
 
     git submodule init
     git submodule update
@@ -41,7 +41,7 @@ if [ ! -d $BINARYEN_BUILD/ ]; then
     
     # Binaryen likes to build single files, but that uses base64 and is less compressible.
     # Make sure we build a separate wasm file
-    sed -i -E 's/-s SINGLE_FILE(=[^ ]*)?//g' $BINARYEN_BUILD/build.ninja
+    sed -i -E 's/-s\s*SINGLE_FILE(=[^ ]*)?//g' $BINARYEN_BUILD/build.ninja
 
     # Binaryen likes to build with -flto, which is great.
     # However, LTO generates objects file with LLVM-IR bitcode rather than WebAssembly.
@@ -51,7 +51,7 @@ if [ ! -d $BINARYEN_BUILD/ ]; then
 
     # Binaryen builds with NODERAWFS, which is not compatible with browser workflows.
     # Disable it.
-    sed -i -E 's/-s NODERAWFS(\s*=\s*[^ ]*)?//g' $BINARYEN_BUILD/build.ninja
+    sed -i -E 's/-s\s*NODERAWFS(\s*=\s*[^ ]*)?//g' $BINARYEN_BUILD/build.ninja
 
     # Make sure we build js modules (.mjs).
     # The patch-ninja.sh script assumes that.
