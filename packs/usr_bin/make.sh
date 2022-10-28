@@ -3,8 +3,8 @@
 mkdir -p usr/bin
 
 # llvm-box binaries
-echo -n "llvm-box;clang-15"                     > usr/bin/clang++
-echo -n "llvm-box;clang-15"                     > usr/bin/clang
+echo -n "llvm-box;clang"                        > usr/bin/clang++
+echo -n "llvm-box;clang"                        > usr/bin/clang
 echo -n "llvm-box;llvm-nm"                      > usr/bin/llvm-nm
 echo -n "llvm-box;llvm-ar"                      > usr/bin/llvm-ar
 echo -n "llvm-box;llvm-objcopy"                 > usr/bin/llvm-objcopy

@@ -26,7 +26,7 @@ if [ ! -d $LLVM_SRC/ ]; then
     
     # This is the last tested commit of llvm-project.
     # Feel free to try with a newer version
-    git reset --hard 608161225ef1b8d08973188f3162db9363455486
+    git reset --hard d5a963ab8b40fcf7a99acd834e5f10a1a30cc2e5
 
     # The clang driver will sometimes spawn a new process to avoid memory leaks.
     # Since this complicates matters quite a lot for us, just disable that.
@@ -65,10 +65,6 @@ if [ ! -d $LLVM_BUILD/ ]; then
         -DLLVM_INCLUDE_TESTS=OFF \
         -DLLVM_TABLEGEN=$LLVM_NATIVE/bin/llvm-tblgen \
         -DCLANG_TABLEGEN=$LLVM_NATIVE/bin/clang-tblgen
-    
-    # For some reason the clang file is called "clang.js-14" instead of "clang-14.js".
-    # Fix that.
-    sed -i -E 's/\.(m?)js-([0-9]+)/-\2.\1js/g' $LLVM_BUILD/build.ninja
 
     # Make sure we build js modules (.mjs).
     # The patch-ninja.sh script assumes that.
@@ -86,7 +82,7 @@ if [ ! -d $LLVM_BUILD/ ]; then
         $LLVM_BUILD/build.ninja \
         llvm-box \
         $BUILD/tooling \
-        clang-15 lld llvm-nm llvm-ar llvm-objcopy llc \
+        clang lld llvm-nm llvm-ar llvm-objcopy llc \
         > $TMP_FILE
     cat $TMP_FILE >> $LLVM_BUILD/build.ninja
     popd
