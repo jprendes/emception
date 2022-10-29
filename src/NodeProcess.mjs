@@ -271,12 +271,20 @@ export default class NodeProcess extends Process {
                 printErr(args.join(" ") + "\n");
             }
         });
+        require.cache.set("assert", (value, message) => {
+            if (!value) {
+                throw new AssertionError(message || `${value} == true`);
+            }
+        });
         require.cache.set("fs", {
             existsSync: (path) => {
                 return this.FS.analyzePath(path).exists;
             },
             readFileSync: (path) => {
                 return this.FS.readFile(path, { encoding: "utf8" });
+            },
+            writeFileSync: (...args) => {
+                this.FS.writeFile(...args);
             },
             createWriteStream: (path, opts = {}) => {
                 if (!((("string" === typeof opts) && opts !== "w") || (opts && opts.flags && opts.flags !== "w"))) {
