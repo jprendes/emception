@@ -30,7 +30,7 @@ module.exports = {
             patterns: [{
                 from: "../build/emception/brotli/brotli.wasm",
                 to: "brotli/brotli.wasm"
-            },{
+            }, {
                 from: "../build/emception/wasm-package/wasm-package.wasm",
                 to: "wasm-package/wasm-package.wasm"
             }],
@@ -54,5 +54,21 @@ module.exports = {
             exclude: /monaco-editor/,
             use: ["worker-loader"],
         }]
+    },
+    devServer: {
+        allowedHosts: "auto",
+        client: {
+            logging: 'warn',
+            overlay: true,
+            progress: true,
+            reconnect: true,
+        },
+        compress: true,
+        port: "auto",
+        http2: true,
+        https: true,
+        host: "local-ip",
+        hot: "only",
+        setupExitSignals: true,
     },
 };

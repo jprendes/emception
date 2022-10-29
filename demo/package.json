@@ -1,7 +1,8 @@
 {
     "name": "emception",
     "scripts": {
-        "build": "webpack --mode=production --stats-children"
+        "build": "webpack --mode=production --stats-children",
+        "dev": "webpack serve --mode=development --stats-children"
     },
     "devDependencies": {
         "comlink": "^4.3.1",
@@ -16,7 +17,7 @@
         "style-loader": "^3.3.1",
         "webpack": "^5.52.1",
         "webpack-cli": "^4.8.0",
-        "webpack-dev-server": "^3.11.2",
+        "webpack-dev-server": "^4.11.1",
         "webpack-mode": "^1.1.0",
         "worker-loader": "^3.0.8",
         "xterm": "^4.14.1",
