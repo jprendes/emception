@@ -1,13 +1,14 @@
 import * as Comlink from "comlink";
 
-import FileSystem from "../build/emception/FileSystem.mjs";
+import FileSystem from "emception/FileSystem.mjs";
 
-import LlvmBoxProcess from "../build/emception/LlvmBoxProcess.mjs";
-import BinaryenBoxProcess from "../build/emception/BinaryenBoxProcess.mjs";
-import PythonProcess from "../build/emception/PythonProcess.mjs";
-import NodeProcess from "../build/emception/NodeProcess.mjs";
+import LlvmBoxProcess from "emception/LlvmBoxProcess.mjs";
+import BinaryenBoxProcess from "emception/BinaryenBoxProcess.mjs";
+import PythonProcess from "emception/PythonProcess.mjs";
+import NodeProcess from "emception/NodeProcess.mjs";
 
-import root_pack_url from "../build/emception/root.pack.br";
+import root_pack from "emception/root_pack.mjs";
+import lazy_cache from "emception/lazy-cache/index.mjs";
 
 class Emception {
     fileSystem = null;
@@ -17,10 +18,14 @@ class Emception {
         const fileSystem = await new FileSystem();
         this.fileSystem = fileSystem;
 
-        fileSystem.persist("/emscripten/cache");
-        await fileSystem.pull();
-        await fileSystem.unpack(root_pack_url);
-        await fileSystem.push();
+        await fileSystem.cachedLazyFile("/root.pack.br", ...root_pack);
+        await fileSystem.unpack("/root.pack.br");
+
+        // Populate the emscripten cache
+        for (const [relpath, ...rest] of lazy_cache) {
+            const path = `/emscripten/${relpath.slice(2)}`;
+            await fileSystem.cachedLazyFile(path, ...rest);
+        }
       
         if (fileSystem.exists("/emscripten/cache/cache.lock")) {
             fileSystem.unlink("/emscripten/cache/cache.lock");

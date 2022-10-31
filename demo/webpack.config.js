@@ -13,6 +13,9 @@ module.exports = {
         path: path.resolve(__dirname, "../build/demo")
     },
     resolve: {
+        alias: {
+            emception: "../build/emception",
+        },
         fallback: {
             "llvm-box.wasm": false,
             "binaryen-box.wasm": false,
@@ -47,7 +50,7 @@ module.exports = {
             test: /\.wasm$/,
             type: "asset/resource",
         }, {
-            test: /\.br$/,
+            test: /\.(br|a)$/,
             type: "asset/resource",
         }, {
             test: /\.worker\.m?js$/,

@@ -33,5 +33,31 @@ mkdir -p $BUILD/emception/wasm-package/
 cp $BUILD/wasm-package/wasm-package.{mjs,wasm} $BUILD/emception/wasm-package/
 
 $SRC/build-packs.sh $BUILD
+
+MD5="$(md5sum "$BUILD/packs/root.pack")"
+MD5="${MD5%% *}"
+
 brotli --best --keep $BUILD/packs/root.pack
-cp $BUILD/packs/root.pack.br $BUILD/emception/
+
+SIZE="$(stat --printf="%s" "$BUILD/packs/root.pack.br")"
+
+{
+    echo "import root_pack_url from \"./root.pack.br\";"
+    echo -n 'export default ['
+    echo -n "$SIZE"
+    echo -n ','
+    echo -n "$MD5" | jq -sR | tr -d '\n'
+    echo -n ','
+    echo -n "root_pack_url"
+    echo '];'
+} > "$BUILD/packs/root_pack.mjs"
+
+cp -f "$BUILD/packs/root.pack.br" "$BUILD/emception/"
+cp -f "$BUILD/packs/root_pack.mjs" "$BUILD/emception/"
+
+cp -f -R "$BUILD/packs/emscripten/emscripten/lazy-cache" "$BUILD/emception/"
+
+{
+    echo 'import lazy_cache from "./lazy-cache/index.mjs";'
+    echo 'export default lazy_cache;'
+} > "$BUILD/emception/lazy-cache.mjs"
