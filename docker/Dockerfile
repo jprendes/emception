@@ -2,7 +2,16 @@
 # Feel free to try with a newer version
 FROM emscripten/emsdk:3.1.24
 
-RUN apt update && apt install -y docker.io ninja-build jq brotli
+RUN DEBIAN_FRONTEND=noninteractive apt --no-install-recommends -qy update && \
+    DEBIAN_FRONTEND=noninteractive apt --no-install-recommends -qy install \
+    docker.io \
+    pkg-config \
+    ninja-build \
+    jq \
+    brotli \
+    autoconf \
+    autoconf-archive \
+    zlib1g-dev
 
 # Add to PATH the clang version that ships with emsdk
 ENV PATH="${EMSDK}/upstream/bin:${PATH}"

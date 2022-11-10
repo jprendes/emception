@@ -19,6 +19,7 @@ module.exports = {
         fallback: {
             "llvm-box.wasm": false,
             "binaryen-box.wasm": false,
+            "python.wasm": false,
             "path": false,
             "node-fetch": false,
             "vm": false
@@ -50,7 +51,7 @@ module.exports = {
             test: /\.wasm$/,
             type: "asset/resource",
         }, {
-            test: /\.(br|a)$/,
+            test: /\.(pack|br|a)$/,
             type: "asset/resource",
         }, {
             test: /\.worker\.m?js$/,
@@ -60,18 +61,11 @@ module.exports = {
     },
     devServer: {
         allowedHosts: "auto",
-        client: {
-            logging: 'warn',
-            overlay: true,
-            progress: true,
-            reconnect: true,
-        },
-        compress: true,
         port: "auto",
-        http2: true,
-        https: true,
-        host: "local-ip",
-        hot: "only",
-        setupExitSignals: true,
+        server: "https",
+        headers: {
+            "Cross-Origin-Embedder-Policy": "require-corp",
+            "Cross-Origin-Opener-Policy": "same-origin",
+        }
     },
 };

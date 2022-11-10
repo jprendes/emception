@@ -32,12 +32,12 @@ export default class FileSystem extends EmProcess {
                 // it's a brotli file, decompress it
                 const brotli = await this._brotli;
                 this.FS.writeFile("/tmp/archive.pack.br", buffer);
-                brotli.exec(["brotli", "--decompress", "/tmp/archive.pack.br"], { cwd: "/tmp/" });
+                await brotli.exec(["brotli", "--decompress", "/tmp/archive.pack.br"], { cwd: "/tmp/" });
                 this.FS.unlink("/tmp/archive.pack.br");
             } else {
                 this.FS.writeFile("/tmp/archive.pack", buffer);
             }
-            this.exec(["wasm-package", "unpack", "/tmp/archive.pack"], { cwd: "/" });
+            await this.exec(["wasm-package", "unpack", "/tmp/archive.pack"], { cwd: "/" });
             this.FS.unlink("/tmp/archive.pack");
         }));
     }

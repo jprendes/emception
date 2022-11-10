@@ -26,6 +26,9 @@ cp $BUILD/binaryen/bin/binaryen-box.mjs $BUILD/emception/binaryen/
 mkdir -p $BUILD/emception/pyodide/
 cp $BUILD/pyodide/{pyodide.asm.mjs,pyodide.mjs} $BUILD/emception/pyodide/
 
+mkdir -p $BUILD/emception/cpython/
+cp $BUILD/cpython/python.mjs $BUILD/emception/cpython/
+
 mkdir -p $BUILD/emception/brotli/
 cp $BUILD/brotli/brotli.{mjs,wasm} $BUILD/emception/brotli/
 
@@ -37,12 +40,12 @@ $SRC/build-packs.sh $BUILD
 MD5="$(md5sum "$BUILD/packs/root.pack")"
 MD5="${MD5%% *}"
 
-brotli --best --keep $BUILD/packs/root.pack
+#brotli --best --keep $BUILD/packs/root.pack
 
-SIZE="$(stat --printf="%s" "$BUILD/packs/root.pack.br")"
+SIZE="$(stat --printf="%s" "$BUILD/packs/root.pack")"
 
 {
-    echo "import root_pack_url from \"./root.pack.br\";"
+    echo "import root_pack_url from \"./root.pack\";"
     echo -n 'export default ['
     echo -n "$SIZE"
     echo -n ','
@@ -52,7 +55,8 @@ SIZE="$(stat --printf="%s" "$BUILD/packs/root.pack.br")"
     echo '];'
 } > "$BUILD/packs/root_pack.mjs"
 
-cp -f "$BUILD/packs/root.pack.br" "$BUILD/emception/"
+cp -f "$BUILD/packs/root.pack" "$BUILD/emception/"
+#cp -f "$BUILD/packs/root.pack.br" "$BUILD/emception/"
 cp -f "$BUILD/packs/root_pack.mjs" "$BUILD/emception/"
 
 cp -f -R "$BUILD/packs/emscripten/emscripten/lazy-cache" "$BUILD/emception/"

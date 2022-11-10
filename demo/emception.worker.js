@@ -5,6 +5,7 @@ import FileSystem from "emception/FileSystem.mjs";
 import LlvmBoxProcess from "emception/LlvmBoxProcess.mjs";
 import BinaryenBoxProcess from "emception/BinaryenBoxProcess.mjs";
 import PythonProcess from "emception/PythonProcess.mjs";
+import Python3Process from "emception/Python3Process.mjs";
 import NodeProcess from "emception/NodeProcess.mjs";
 
 import root_pack from "emception/root_pack.mjs";
@@ -18,15 +19,15 @@ class Emception {
         const fileSystem = await new FileSystem();
         this.fileSystem = fileSystem;
 
-        await fileSystem.cachedLazyFile("/root.pack.br", ...root_pack);
-        await fileSystem.unpack("/root.pack.br");
+        await fileSystem.cachedLazyFile("/root.pack", ...root_pack);
+        await fileSystem.unpack("/root.pack");
 
         // Populate the emscripten cache
         for (const [relpath, ...rest] of lazy_cache) {
             const path = `/emscripten/${relpath.slice(2)}`;
             await fileSystem.cachedLazyFile(path, ...rest);
         }
-      
+
         if (fileSystem.exists("/emscripten/cache/cache.lock")) {
             fileSystem.unlink("/emscripten/cache/cache.lock");
         }
@@ -40,8 +41,8 @@ class Emception {
             "llvm-box": new LlvmBoxProcess(processConfig),
             "binaryen-box": new BinaryenBoxProcess(processConfig),
             "node": new NodeProcess(processConfig),
-            "python": new PythonProcess(processConfig),
-            "main-python": new PythonProcess(processConfig),
+            "python": new Python3Process(processConfig),
+            "main-python": new Python3Process(processConfig),
         };
         this.tools = tools;
 
@@ -58,7 +59,12 @@ class Emception {
     async run(...args) {
         await this.tools["main-python"];
         if (args.length == 1) args = args[0].split(/ +/);
-        args[0] = `/emscripten/${args[0]}.py`;
+        args = [
+            "/usr/bin/python",
+            "-E",
+            `/emscripten/${args[0]}.py`,
+            ...args.slice(1)
+        ];
         return await this.tools["main-python"].exec(args, {
             print: (...args) => this.onstdout(...args),
             printErr: (...args) => this.onstderr(...args),
@@ -77,7 +83,12 @@ class Emception {
     async _run_process_impl(argv, opts = {}) {
         const in_emscripten = argv[0].match(/\/emscripten\/(.+)(\.py)?/)
         if (in_emscripten) {
-            argv[0] = `/emscripten/${in_emscripten[1]}.py`;
+            argv = [
+                "/usr/bin/python",
+                "-E",
+                `/emscripten/${in_emscripten[1]}.py`,
+                ...args.slice(1)
+            ];
         }
   
         if (!this.fileSystem.exists(argv[0])) {
@@ -89,7 +100,7 @@ class Emception {
             return result;
         }
   
-        const tool_info = argv[0].endsWith(".py") ? "python" : this.fileSystem.readFile(argv[0], {encoding: "utf8"});
+        const tool_info = argv[0] === "/usr/bin/python" ? "python" : this.fileSystem.readFile(argv[0], {encoding: "utf8"});
         const [tool_name, ...extra_args] = tool_info.split(";")
   
         if (!(tool_name in this.tools)) {
