@@ -15,9 +15,10 @@ WASM_UTILS=$(realpath $WASM_UTILS)
 
 em++ \
     -s ALLOW_MEMORY_GROWTH=1 \
-    -s EXPORTED_FUNCTIONS="_main,_free,_malloc" \
-    -s EXPORTED_RUNTIME_METHODS="FS,PROXYFS,allocateUTF8" \
+    -s EXPORTED_FUNCTIONS=_main,_free,_malloc \
+    -s EXPORTED_RUNTIME_METHODS=FS,PROXYFS,ERRNO_CODES,allocateUTF8 \
     -lproxyfs.js \
+    --js-library=$SRC/../../emlib/fsroot.js \
     -lidbfs.js \
     -flto \
     -O3 \

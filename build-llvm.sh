@@ -48,8 +48,14 @@ cmake --build $LLVM_NATIVE/ -- llvm-tblgen clang-tblgen
 
 if [ ! -d $LLVM_BUILD/ ]; then
     CXXFLAGS="-Dwait4=__syscall_wait4" \
-    LDFLAGS="-s LLD_REPORT_UNDEFINED=1 -s ALLOW_MEMORY_GROWTH=1 -s EXPORTED_FUNCTIONS=_main,_free,_malloc -s EXPORTED_RUNTIME_METHODS=FS,PROXYFS,allocateUTF8 -lproxyfs.js" \
-    emcmake cmake -G Ninja \
+    LDFLAGS="\
+        -s LLD_REPORT_UNDEFINED=1 \
+        -s ALLOW_MEMORY_GROWTH=1 \
+        -s EXPORTED_FUNCTIONS=_main,_free,_malloc \
+        -s EXPORTED_RUNTIME_METHODS=FS,PROXYFS,ERRNO_CODES,allocateUTF8 \
+        -lproxyfs.js \
+        --js-library=$SRC/emlib/fsroot.js \
+    " emcmake cmake -G Ninja \
         -S $LLVM_SRC/llvm/ \
         -B $LLVM_BUILD/ \
         -DCMAKE_BUILD_TYPE=Release \
@@ -70,9 +76,9 @@ if [ ! -d $LLVM_BUILD/ ]; then
     # The patch-ninja.sh script assumes that.
     sed -i -E 's/\.js/.mjs/g' $LLVM_BUILD/build.ninja
 
-    # Include Emscripten's "proxyfs" in the builds.
-    # The patch-ninja.sh script will inherit that in the new target.
-    sed -i -E 's/proxyfs\.mjs/proxyfs.js/g' $LLVM_BUILD/build.ninja
+    # The mjs patching is over zealous, and patches some source JS files rather than just output files.
+    # Undo that.
+    sed -i -E 's/(pre|post|proxyfs|fsroot)\.mjs/\1.js/g' $LLVM_BUILD/build.ninja
 
     # Patch the build script to add the "llvm-box" target.
     # This new target bundles many executables in one, reducing the total size.

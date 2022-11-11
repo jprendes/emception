@@ -31,7 +31,15 @@ if [ ! -d $BROTLI_SRC/ ]; then
 fi
 
 if [ ! -d $BROTLI_BUILD/ ]; then
-    CFLAGS="-flto" LDFLAGS="-s ALLOW_MEMORY_GROWTH=1 -flto -s EXPORTED_FUNCTIONS=_main,_free,_malloc -s EXPORTED_RUNTIME_METHODS=FS,PROXYFS,allocateUTF8 -lproxyfs.js" emcmake cmake -G Ninja \
+    CFLAGS="-flto" \
+    LDFLAGS="\
+        -flto \
+        -s ALLOW_MEMORY_GROWTH=1 \
+        -s EXPORTED_FUNCTIONS=_main,_free,_malloc \
+        -s EXPORTED_RUNTIME_METHODS=FS,PROXYFS,ERRNO_CODES,allocateUTF8 \
+        -lproxyfs.js \
+        --js-library=$SRC/emlib/fsroot.js \
+    " emcmake cmake -G Ninja \
         -S $BROTLI_SRC/ \
         -B $BROTLI_BUILD/ \
         -DCMAKE_BUILD_TYPE=Release
@@ -39,9 +47,9 @@ if [ ! -d $BROTLI_BUILD/ ]; then
     # Make sure we build js modules (.mjs).
     sed -i -E 's/\.js/.mjs/g' $BROTLI_BUILD/build.ninja
 
-    # The mjs patching is over zealous, and patches some JS library files rather than just output files.
+    # The mjs patching is over zealous, and patches some source JS files rather than just output files.
     # Undo that.
-    sed -i -E 's/proxyfs\.mjs/proxyfs.js/g' $BROTLI_BUILD/build.ninja
+    sed -i -E 's/(pre|post|proxyfs|fsroot)\.mjs/\1.js/g' $BROTLI_BUILD/build.ninja
 fi
 cmake --build $BROTLI_BUILD/ -- brotli.mjs
 

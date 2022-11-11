@@ -34,7 +34,13 @@ if [ ! -d $BINARYEN_SRC/ ]; then
 fi
 
 if [ ! -d $BINARYEN_BUILD/ ]; then
-    LDFLAGS="-s ALLOW_MEMORY_GROWTH=1 -s EXPORTED_FUNCTIONS=_main,_free,_malloc -s EXPORTED_RUNTIME_METHODS=FS,PROXYFS,allocateUTF8 -lproxyfs.js" emcmake cmake -G Ninja \
+    LDFLAGS="\
+        -s ALLOW_MEMORY_GROWTH=1 \
+        -s EXPORTED_FUNCTIONS=_main,_free,_malloc \
+        -s EXPORTED_RUNTIME_METHODS=FS,PROXYFS,ERRNO_CODES,allocateUTF8 \
+        -lproxyfs.js \
+        --js-library=$SRC/emlib/fsroot.js \
+    " emcmake cmake -G Ninja \
         -S $BINARYEN_SRC/ \
         -B $BINARYEN_BUILD/ \
         -DCMAKE_BUILD_TYPE=Release
@@ -60,8 +66,7 @@ if [ ! -d $BINARYEN_BUILD/ ]; then
     # The mjs patching is over zealous, and patches some source JS files rather than just output files.
     # Undo that.
     sed -i -E 's/\.mjs-/.js-/g' $BINARYEN_BUILD/build.ninja
-    sed -i -E 's/(pre|post)\.mjs/\1.js/g' $BINARYEN_BUILD/build.ninja
-    sed -i -E 's/proxyfs\.mjs/proxyfs.js/g' $BINARYEN_BUILD/build.ninja
+    sed -i -E 's/(pre|post|proxyfs|fsroot)\.mjs/\1.js/g' $BINARYEN_BUILD/build.ninja
 
     # Patch the build script to add the "binaryen-box" target.
     # This new target bundles many executables in one, reducing the total size.

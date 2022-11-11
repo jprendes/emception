@@ -18,7 +18,7 @@ BUILD=$(realpath "$BUILD")
 CPYTHON_BUILD=$BUILD/cpython
 CPYTHON_NATIVE=$BUILD/cpython-native
 
-# If we don't have a copy of pyodide, make one
+# If we don't have a copy of cpython, make one
 if [ ! -d $CPYTHON_SRC/ ]; then
     git clone https://github.com/python/cpython.git "$CPYTHON_SRC/"
 
@@ -58,8 +58,14 @@ if [ ! -d $CPYTHON_BUILD/ ]; then
     LIBSQLITE3_CFLAGS=" " \
     BZIP2_CFLAGS=" " \
     CFLAGS="-D__EMSCRIPTEN_ASYNCIFY__" \
-    LDFLAGS="-s ASYNCIFY -s EXPORTED_FUNCTIONS=_main,_free,_malloc -s EXPORTED_RUNTIME_METHODS=ccall,FS,PROXYFS,allocateUTF8 -s ASYNCIFY_STACK_SIZE=819200 -lproxyfs.js" \
-    emconfigure $CPYTHON_SRC/configure -C \
+    LDFLAGS="\
+        -s ASYNCIFY \
+        -s ASYNCIFY_STACK_SIZE=819200 \
+        -s EXPORTED_FUNCTIONS=_main,_free,_malloc \
+        -s EXPORTED_RUNTIME_METHODS=ccall,FS,PROXYFS,ERRNO_CODES,allocateUTF8 \
+        -lproxyfs.js \
+        --js-library=$SRC/emlib/fsroot.js \
+    " emconfigure $CPYTHON_SRC/configure -C \
         --host=wasm32-unknown-emscripten \
         --build=$($CPYTHON_SRC/config.guess) \
         --with-emscripten-target=browser \
@@ -80,26 +86,3 @@ pushd $CPYTHON_BUILD/
 emmake make -j$(nproc)
 
 popd
-
-exit 0;
-
-pushd $CPYTHON_SRC
-# Do a minimap build of Pyodide
-./run_docker --non-interactive --port none --pre-built env PYODIDE_PACKAGES="micropip" make
-popd
-
-# Pyodide makes heavy use of globals due to the package loading mechanism.
-# That makes it so that we can't have two pyodides running in the same page.
-# Since we don't need to load packages, patch that so that we can run many pyodides.
-# We already apply some of the patches at the source level.
-# But there's a final fix that's hard to fix without touching too much.
-# We do that final fix in the built file.
-#
-# Patch pyodide.asm.js and copy over as pyodide.asm.mjs (.mjs)
-# Patch pyodide.mjs and copy over
-$SRC/patch-pyodide-build.sh "$CPYTHON_SRC/build" "$CPYTHON_BUILD"
-
-# Copy over the rest of the built files, which is basically the wasm file
-cp $CPYTHON_SRC/build/pyodide.asm.wasm $CPYTHON_BUILD
-
-$SRC/packs/pyodide/package.sh $CPYTHON_SRC $BUILD
