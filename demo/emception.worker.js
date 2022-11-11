@@ -4,7 +4,6 @@ import FileSystem from "emception/FileSystem.mjs";
 
 import LlvmBoxProcess from "emception/LlvmBoxProcess.mjs";
 import BinaryenBoxProcess from "emception/BinaryenBoxProcess.mjs";
-import PythonProcess from "emception/PythonProcess.mjs";
 import Python3Process from "emception/Python3Process.mjs";
 import NodeProcess from "emception/NodeProcess.mjs";
 
@@ -19,8 +18,8 @@ class Emception {
         const fileSystem = await new FileSystem();
         this.fileSystem = fileSystem;
 
-        await fileSystem.cachedLazyFile("/root.pack", ...root_pack);
-        await fileSystem.unpack("/root.pack");
+        await fileSystem.cachedLazyFile(...root_pack);
+        await fileSystem.unpack(root_pack[0]);
 
         // Populate the emscripten cache
         for (const [relpath, ...rest] of lazy_cache) {
