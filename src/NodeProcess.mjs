@@ -9,12 +9,37 @@ function unique(arr) {
 }
 
 export default class NodeProcess extends Process {
-    constructor(opts_) {
-        const { FS, ...opts } = opts_;
+    #module = null;
+
+    constructor({
+        FS,
+        onrunprocess,
+        onprint,
+        onprintErr,
+    } = {}) {
+        super({
+            onrunprocess,
+            onprint,
+            onprintErr,
+        });
+
+        this.ready = this.#init(FS);
+
+        const promise = this.ready.then(() => {
+            delete this.then;
+            return this;
+        });
+        this.then = (...args) => promise.then(...args);
+    }
+
+    #init = async (FS) => {
         // This is not an Emscripten based process.
         // Create a simple Emscripten base process to use its FS.
-        const fs = new FileSystem({ FS });
-        super({ ...opts, FS: fs.then((p) => p.FS) });
+        this.#module = await new FileSystem({ FS });
+    };
+
+    get FS() {
+        return this.#module.FS;
     }
 
     async exec(args, opts = {}) {
@@ -313,7 +338,9 @@ export default class NodeProcess extends Process {
             return this.exec(["node", "-e", "console.log(`v${process.versions.node}`)"]);
         } else if (args[1] === "-e") {
             this.FS.writeFile("/tmp/node_tmp.js", `process.argv = [process.argv[0], ...process.argv.slice(2)]; ${args[2]}`);
-            return this.exec([args[0], "/tmp/node_tmp.js", ...args.slice(3)]);
+            const res = this.exec([args[0], "/tmp/node_tmp.js", ...args.slice(3)]);
+            this.FS.unlink("/tmp/node_tmp.js");
+            return res;
         } else {
             let curr_cwd = this.cwd;
             if (opts.cwd) this.cwd = opts.cwd;

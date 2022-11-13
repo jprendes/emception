@@ -1,5 +1,4 @@
 import Process from "./Process.mjs";
-import shareFS from "./SHAREDFS.mjs";
 
 export default class EmProcess extends Process {
     _module = null;
@@ -8,26 +7,74 @@ export default class EmProcess extends Process {
     _print = (...args) => console.log(...args);
     _printErr = (...args) => console.warn(...args);
 
-    constructor(Module, opts_ = {}) {
-        const { FS, ...opts } = opts_;
+    constructor(Module, {
+        FS,
+        onrunprocess,
+        onprint,
+        onprintErr,
+        ...opts
+    } = {}) {
         super({
-            ...opts,
-            FS: (async () => {
-                const _mod = {
-                    ...opts,
-                    wasmBinary: await opts.wasmBinary,
-                    noInitialRun: true,
-                    noExitRuntime: true,
-                    print: (...args) => this._print(...args),
-                    printErr: (...args) => this._printErr(...args),
-                    preInit: () => FS && shareFS(FS, _mod)
-                };
-                const _module = await new Module(_mod);
-                this._module = _module;
-                this._memory = Uint8Array.from(this._module.HEAPU8.slice(0, this._module.HEAPU8.length));
-                return this._module.FS;
-            })()
+            onrunprocess,
+            onprint,
+            onprintErr,
         });
+        this.ready = this.#init(Module, FS, { onrunprocess, ...opts });
+
+        const promise = this.ready.then(() => {
+            delete this.then;
+            return this;
+        });
+        this.then = (...args) => promise.then(...args);
+    }
+
+    #init = async (Module, FS, opts) => {
+        const fsroot = FS && {
+            ROOT: {
+                type: "PROXYFS",
+                opts: {
+                    root: "/",
+                    fs: FS,
+                },
+            }
+        };
+        this._module = await new Module({
+            ...opts,
+            ...fsroot,
+            noInitialRun: true,
+            noExitRuntime: true,
+            print: (...args) => this._print(...args),
+            printErr: (...args) => this._printErr(...args),
+        });
+        this._memory = this._module.HEAPU8.slice();
+
+        if (fsroot) {
+            // Do not cache nodes belonging to the PROXYFS mountpoint.
+            const hashAddNode = this._module.FS.hashAddNode;
+            this._module.FS.hashAddNode = (node) => {
+                if (node.mount.mountpoint === "/") return;
+                hashAddNode(node);
+            }
+        }
+
+        this.#addErorCodeToErrnoError();
+    }
+
+    #addErorCodeToErrnoError = () => {
+        const FS = this._module.FS;
+        const ERRNO_CODES = Object.fromEntries(
+            Object.entries(this._module.ERRNO_CODES)
+                .map(([k, v]) => [v, k])
+        );
+        Object.defineProperty(FS.ErrnoError.prototype, "code", {
+            get: function () {
+                return ERRNO_CODES[this.errno];
+            }
+        });
+    }
+
+    get FS() {
+        return this._module.FS;
     }
 
     _callMain(argc, argv) {
@@ -72,7 +119,9 @@ export default class EmProcess extends Process {
             if (opts.cwd) this.cwd = opts.cwd;
             returncode = await this._callMain(argc, argv);
         } catch (e) {
-            if ("status" in e) {
+            if (typeof e === "number") {
+                returncode = -84;
+            } else if ("status" in e) {
                 returncode = e.status;
             } else {
                 returncode = -42;

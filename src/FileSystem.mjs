@@ -1,23 +1,24 @@
 import EmProcess from "./EmProcess.mjs";
 import WasmPackageModule from "./wasm-package/wasm-package.mjs";
-import { fetch_buffer_view } from "./utils.js";
 import createLazyFile from "./createLazyFile.mjs"
 import BrotliProcess from "./BrotliProcess.mjs";
-
-const wasmBinary = fetch_buffer_view("./wasm-package/wasm-package.wasm");
 
 export default class FileSystem extends EmProcess {
     _brotli = null;
     _cache = null;
 
     constructor({ cache = "/cache", ...opts } = {}) {
-        super(WasmPackageModule, { ...opts, wasmBinary });
-        this._brotli = (async () => new BrotliProcess({ FS: (await this).FS }))();
+        super(WasmPackageModule, { ...opts });
+        this.#init(cache, opts);
+    }
+
+    #init = async (cache, opts) => {
+        await this;
+        this._brotli = new BrotliProcess({ FS: this.FS, ...opts});
         this._cache = (async () => {
             while (cache.endsWith("/")) {
                 cache = cache.slice(0, -1);
             }
-            await this;
             if (this.exists(cache)) return cache;
             this.persist(cache);
             await this.pull();
