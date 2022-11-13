@@ -7,7 +7,20 @@ import shutil;
 def rmtree(path):
     _emception.eval(f'''
         try {{
-            Module.FS.rmdir({json.dumps(path)})
+            const rmtree = (path) => {{
+                const stat = Module.FS.stat(path);
+                if (Module.FS.isDir(stat.mode)) {{
+                    for (const name of Module.FS.readdir(path)) {{
+                        if (name !== "." && name !== "..") {{
+                            rmtree(`${{path}}/${{name}}`);
+                        }}
+                    }}
+                    Module.FS.rmdir(path);
+                }} else {{
+                    Module.FS.unlink(path);
+                }}
+            }}
+            rmtree({json.dumps(path)})
         }} catch (e) {{
             // no-op
         }}
@@ -16,6 +29,7 @@ shutil.rmtree = rmtree
 
 import types;
 import sys;
+import os;
 
 sys.modules['ctypes'] = types.ModuleType('ctypes', 'ctypes stub module');
 
@@ -31,8 +45,8 @@ class Popen(object):
             Module.onrunprocess(
                 {json.dumps(arguments)},
                 {{
-                    cwd: Module.FS.cwd(),
-                    env: {json.dumps(env)}
+                    cwd: {json.dumps(cwd)} || Module.FS.cwd(),
+                    env: {json.dumps(env)} || {{}},
                 }},
             )
         '''));
