@@ -26,9 +26,6 @@ cp $BUILD/binaryen/bin/binaryen-box.mjs $BUILD/emception/binaryen/
 mkdir -p $BUILD/emception/quicknode/
 cp $BUILD/quicknode/quicknode.mjs $BUILD/emception/quicknode/
 
-# mkdir -p $BUILD/emception/pyodide/
-# cp $BUILD/pyodide/{pyodide.asm.mjs,pyodide.mjs} $BUILD/emception/pyodide/
-
 mkdir -p $BUILD/emception/cpython/
 cp $BUILD/cpython/python.mjs $BUILD/emception/cpython/
 
