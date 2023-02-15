@@ -64,12 +64,10 @@ if [ ! -d $CPYTHON_BUILD/ ]; then
     CONFIG_SITE=$CPYTHON_SRC/Tools/wasm/config.site-wasm32-emscripten \
     LIBSQLITE3_CFLAGS=" " \
     BZIP2_CFLAGS=" " \
-    CFLAGS="-D__EMSCRIPTEN_ASYNCIFY__" \
     LDFLAGS="\
-        -s ASYNCIFY \
-        -s ASYNCIFY_STACK_SIZE=819200 \
+        -s ALLOW_MEMORY_GROWTH=1 \
         -s EXPORTED_FUNCTIONS=_main,_free,_malloc \
-        -s EXPORTED_RUNTIME_METHODS=ccall,FS,PROXYFS,ERRNO_CODES,allocateUTF8 \
+        -s EXPORTED_RUNTIME_METHODS=FS,PROXYFS,ERRNO_CODES,allocateUTF8 \
         -lproxyfs.js \
         --js-library=$SRC/emlib/fsroot.js \
     " emconfigure $CPYTHON_SRC/configure -C \
@@ -79,7 +77,6 @@ if [ ! -d $CPYTHON_BUILD/ ]; then
         --disable-wasm-dynamic-linking \
         --with-suffix=".mjs" \
         --disable-wasm-preload \
-        --enable-wasm-asyncify \
         --enable-wasm-js-module \
         --with-build-python=$CPYTHON_NATIVE/python \
 

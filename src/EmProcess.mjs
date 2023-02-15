@@ -81,7 +81,7 @@ export default class EmProcess extends Process {
         return this._module._main(argc, argv);
     }
 
-    async exec(args, opts = {}) {
+    exec(args, opts = {}) {
         if ((typeof args) === "string") args = args.split(/ +/g);
 
         // Clang's driver uses global state, and this might not be the first time we run the module.
@@ -117,7 +117,7 @@ export default class EmProcess extends Process {
 
         try {
             if (opts.cwd) this.cwd = opts.cwd;
-            returncode = await this._callMain(argc, argv);
+            returncode = this._module._main(argc, argv);
         } catch (e) {
             if (typeof e === "number") {
                 returncode = -84;

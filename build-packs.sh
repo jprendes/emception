@@ -15,7 +15,6 @@ if [ ! -d $BUILD/packs/ ]; then
 fi
 
 $SRC/packs/emscripten/package.sh $BUILD
-$SRC/packs/node/package.sh $BUILD
 $SRC/packs/usr_bin/package.sh $BUILD
 $SRC/packs/wasm/package.sh $BUILD
 $SRC/packs/cpython/package.sh $BUILD

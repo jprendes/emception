@@ -41,7 +41,7 @@ class Popen(object):
 
     def __init__(self, arguments, stdout = None, stderr = None, env = None, cwd=None, *args, **kwargs):
         self.args = arguments;
-        data = json.loads(_emception.async_eval(f'''
+        data = json.loads(_emception.eval(f'''
             Module.onrunprocess(
                 {json.dumps(arguments)},
                 {{
