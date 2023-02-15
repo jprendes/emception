@@ -28,15 +28,16 @@ if [ ! -d $CPYTHON_SRC/ ]; then
     # Feel free to try with a newer version
     git reset --hard b8a9f13abb61bd91a368e2d3f339de736863050f
 
-    # Patch cpython to add a module to evaluate JS code.
-    git apply $SRC/patches/cpython.patch
-
-    autoreconf -i
-
     popd
 fi
 
 if [ ! -d $CPYTHON_NATIVE/ ]; then
+    # Rever the cpython patch in case this runs after the wasm version reconfigures it.
+    pushd $CPYTHON_SRC/
+    git apply -R $SRC/patches/cpython.patch
+    autoreconf -i
+    popd
+
     mkdir -p $CPYTHON_NATIVE/
 
     pushd $CPYTHON_NATIVE/
@@ -48,6 +49,12 @@ if [ ! -d $CPYTHON_NATIVE/ ]; then
 fi
 
 if [ ! -d $CPYTHON_BUILD/ ]; then
+    # Patch cpython to add a module to evaluate JS code.
+    pushd $CPYTHON_SRC/
+    git apply $SRC/patches/cpython.patch
+    autoreconf -i
+    popd
+
     mkdir -p $CPYTHON_BUILD/
 
     pushd $CPYTHON_BUILD/

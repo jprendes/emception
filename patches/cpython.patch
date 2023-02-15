@@ -151,7 +151,7 @@ index c7945aaf85..57e772bf44 100644
        [browser*], [
          AS_VAR_IF([ac_sys_emscripten_target], [browser-debug], [wasm_debug=yes])
 -        AS_VAR_APPEND([LINKFORSHARED], [" --preload-file=\$(WASM_ASSETS_DIR)"])
-+        AS_VAR_IF([enable_wasm_wasm_preload], [no], [], [
++        AS_VAR_IF([enable_wasm_preload], [no], [], [
 +          AS_VAR_APPEND([LINKFORSHARED], [" --preload-file=\$(WASM_ASSETS_DIR)"])
 +        ])
          WASM_ASSETS_DIR=".\$(prefix)"

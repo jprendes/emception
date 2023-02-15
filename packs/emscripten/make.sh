@@ -20,7 +20,6 @@ pushd emscripten/
 cp $SRC/config ./.emscripten
 
 # We won't support closure-compiler, remove it from the dependencies
-ls -alh .
 cat package.json | \
     jq '. | del(.dependencies["google-closure-compiler"])' \
     > _package.json
