@@ -20,6 +20,7 @@ module.exports = {
             "llvm-box.wasm": false,
             "binaryen-box.wasm": false,
             "python.wasm": false,
+            "quicknode.wasm": false,
             "path": false,
             "node-fetch": false,
             "vm": false

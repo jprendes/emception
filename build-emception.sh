@@ -23,6 +23,9 @@ cp $BUILD/llvm/bin/llvm-box.mjs $BUILD/emception/llvm/
 mkdir -p $BUILD/emception/binaryen/
 cp $BUILD/binaryen/bin/binaryen-box.mjs $BUILD/emception/binaryen/
 
+mkdir -p $BUILD/emception/quicknode/
+cp $BUILD/quicknode/quicknode.mjs $BUILD/emception/quicknode/
+
 # mkdir -p $BUILD/emception/pyodide/
 # cp $BUILD/pyodide/{pyodide.asm.mjs,pyodide.mjs} $BUILD/emception/pyodide/
 

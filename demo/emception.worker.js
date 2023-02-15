@@ -5,7 +5,7 @@ import FileSystem from "emception/FileSystem.mjs";
 import LlvmBoxProcess from "emception/LlvmBoxProcess.mjs";
 import BinaryenBoxProcess from "emception/BinaryenBoxProcess.mjs";
 import Python3Process from "emception/Python3Process.mjs";
-import NodeProcess from "emception/NodeProcess.mjs";
+import NodeProcess from "emception/QuickNodeProcess.mjs";
 
 import root_pack from "emception/root_pack.mjs";
 import lazy_cache from "emception/lazy-cache/index.mjs";
@@ -55,8 +55,7 @@ class Emception {
     onstdout = () => {};
     onstderr = () => {};
 
-    async run(...args) {
-        await this.tools["main-python"];
+    run(...args) {
         if (args.length == 1) args = args[0].split(/ +/);
         args = [
             "/usr/bin/python",
@@ -64,7 +63,7 @@ class Emception {
             `/emscripten/${args[0]}.py`,
             ...args.slice(1)
         ];
-        return await this.tools["main-python"].exec(args, {
+        return this.tools["main-python"].exec(args, {
             print: (...args) => this.onstdout(...args),
             printErr: (...args) => this.onstderr(...args),
             cwd: "/working",
@@ -72,14 +71,14 @@ class Emception {
         })
     };
 
-    async _run_process(argv, opts = {}) {
+    _run_process(argv, opts = {}) {
         this.onprocessstart(argv);
-        const result = await this._run_process_impl(argv, opts);
+        const result = this._run_process_impl(argv, opts);
         this.onprocessend(result);
         return result;
     }
 
-    async _run_process_impl(argv, opts = {}) {
+    _run_process_impl(argv, opts = {}) {
         const in_emscripten = argv[0].match(/\/emscripten\/(.+)(\.py)?/)
         if (in_emscripten) {
             argv = [
@@ -113,13 +112,13 @@ class Emception {
   
         argv = [...extra_args, ...argv];
   
-        const tool = await this.tools[tool_name];
-        const result = await tool.exec(argv, {
+        const tool = this.tools[tool_name];
+        const result = tool.exec(argv, {
             ...opts,
             cwd: opts.cwd || "/",
             path: ["/emscripten"]
         });
-        await this.fileSystem.push();
+        this.fileSystem.push();
         return result;
     };
 }
