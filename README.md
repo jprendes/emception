@@ -3,7 +3,7 @@ Compile C/C++ code with [Emscripten](https://emscripten.org/) in the browser.
 You can see it in action in the [live demo](https://jprendes.github.io/emception/).
 
 # Build
-To build Emception, simply clone the repo, and run `./build-with-docker.sh`. I've only built it on Linux, but you should be able to build it from anywhere you can run Docker. Bear in mind that the build will take a long while (specially cloning/building llvm and building pyodide), so go get a a cup of coffee.
+To build Emception, simply clone the repo, and run `./build-with-docker.sh`. I've only built it on Linux, but you should be able to build it from anywhere you can run Docker. Bear in mind that the build will take a long while (specially cloning/building llvm), so go get a a cup of coffee.
 ```bash
 git clone https://github.com/jprendes/emception.git
 cd emception
@@ -85,23 +85,28 @@ A tar-like application, that can pack several files in one archive. It preserves
 
 This works particularly well in conjunction with a `brotli` build in WebAssembly for servers that don't serve `brotli` compressed content (like GitHub pages): Create a `brotli` module, a `wasm-package` module, and your target module, all sharing the same file system using `SHAREDFS.js` (see below). Write the compressed file in a temporary location and use the `brotli` build to decompress it. Then use the `wasm-package` to unpack the archive content. Now your module should be able to access the preloaded files.
 
-## `SHAREDFS.js`
-This tool can be used to share a file system between different Emscripten modules. The whole filesystem is shared between the modules, except for `/dev` and `/proc` since they contain process specific files/devices.
-
-It can be used as follow:
+## `fsroot.js`
+This is an Emscripten library that lets you change the type of the root filesystem of an emscripten module. By default emscripten uses a `MEMFS` for the root, and mounts other type of filesystems in it (with the exception of `NODERAWFS`, which completely overrides the FS).
+With fsroot.fs you can specify the root to be a different type of FS. For example
 ```js
-import Module from "./Module.mjs"; // the Emscripten module
-import shareFS from "./SHAREDFS.js";
+import Module from "./module.mjs";
 
-const mod_1 = {};
-await new Module(mod_1);
+const first = await new Module(...);
+const second = await new Module({
+    ROOT: {
+        type: "PROXYFS",
+        opts: {
+            root: "/",
+            fs: first.FS,
+        },
+    }
+    ...
+});
 
-const mod_2 = {
-    preInit: () => shareFS(mod_1.FS, mod_2.FS)
-};
-await new Module(mod_2);
-
-mod_1.writeFile("/tmp/test", "hello world!");
-const str = mod_2.readFile("/tmp/test", { encoding: "utf8" });
+first.FS.writeFile("/tmp/test", "hello world!");
+const str = second.FS.readFile("/tmp/test", { encoding: "utf8" });
 console.log(str); // logs "hello world!"
+
 ```
+With this, `first` and `second` would share the root filesystem. This is achieved by mounting a PROXYFS into the root or `second`.
+One consideration is that two `MEMFS` are always mounted, one in `/dev`, and the other in `/self/proc`, since this is usully the desired behaviour.
