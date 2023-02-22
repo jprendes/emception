@@ -20,7 +20,7 @@ CPYTHON_NATIVE=$BUILD/cpython-native
 
 # If we don't have a copy of cpython, make one
 if [ ! -d $CPYTHON_SRC/ ]; then
-    git clone https://github.com/python/cpython.git "$CPYTHON_SRC/"
+    git clone --depth 1 https://github.com/python/cpython.git "$CPYTHON_SRC/"
 
     pushd $CPYTHON_SRC/
 
