@@ -19,7 +19,7 @@ BROTLI_BUILD=$BUILD/brotli
 
 # If we don't have a copy of binaryen, make one
 if [ ! -d $BROTLI_SRC/ ]; then
-    git clone https://github.com/google/brotli.git "$BROTLI_SRC/"
+    git clone --depth 1 https://github.com/google/brotli.git "$BROTLI_SRC/"
 
     pushd $BROTLI_SRC/
     
