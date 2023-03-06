@@ -97,7 +97,7 @@ class Emception {
         }
   
         const tool_info = this.fileSystem.readFile(argv[0], {encoding: "utf8"});
-        const [tool_name, ...extra_args] = tool_info.split(";")
+        const [tool_name] = tool_info.split(";")
   
         const tool = this.tools[tool_name]?.find(p => !p.running);
         if (!tool) {
@@ -109,7 +109,6 @@ class Emception {
             return result;
         }
   
-        argv = [...extra_args, ...argv];
         const result = tool.exec(argv, {
             ...opts,
             cwd: opts.cwd || "/",
