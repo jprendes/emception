@@ -78,6 +78,9 @@ class Emception {
     onstderr = () => {};
 
     run(...args) {
+        if (this.fileSystem.exists("/emscripten/cache/cache.lock")) {
+            this.fileSystem.unlink("/emscripten/cache/cache.lock");
+        }
         if (args.length == 1) args = args[0].split(/ +/);
         return this._run_process_impl([
             `/emscripten/${args[0]}.py`,
