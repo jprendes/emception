@@ -38,6 +38,8 @@ class Emception {
         await fileSystem.cachedLazyFile(...root_pack);
         await fileSystem.unpack(root_pack[0]);
 
+        fileSystem.mkdirTree("/working");
+
         // Populate the emscripten cache
         for (const [relpath, ...rest] of lazy_cache) {
             const path = `/emscripten/${relpath.slice(2)}`;

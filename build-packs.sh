@@ -17,6 +17,5 @@ fi
 $SRC/packs/emscripten/package.sh $BUILD
 $SRC/packs/cpython/package.sh $BUILD
 $SRC/packs/wasm/package.sh $BUILD
-$SRC/packs/working/package.sh $BUILD
 
-cat $BUILD/packs/*/*.pack > $BUILD/packs/root.pack
+cat $BUILD/packs/{emscripten,cpython,wasm}/*.pack > $BUILD/packs/root.pack
