@@ -88,14 +88,24 @@ export default class FileSystem extends EmProcess {
         return this.FS.writeFile(...args)
     }
 
+    #pull = null;
+    #pullRequested = false;
     pull() {
-        return new Promise((resolve, reject) => this.FS.syncfs(true, function (err) {
+        if (this.#pull) {
+            this.#pullRequested = true;
+            return this.#pull;
+        }
+        this.#pullRequested = false;
+        this.#pull = new Promise((resolve, reject) => this.FS.syncfs(true, (err) => {
+            this.#pull = null;
+            if (this.#pullRequested) this.pull();
             if (err) {
                 reject(err);
             } else {
                 resolve();
             }
         }));
+        return this.#pull;
     }
 
     push() {
