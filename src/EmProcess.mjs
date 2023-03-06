@@ -48,11 +48,11 @@ export default class EmProcess extends Process {
         });
         this._memory = this._module.HEAPU8.slice();
 
-        if (fsroot) {
+        if (fsroot || opts.ROOT) {
             // Do not cache nodes belonging to the PROXYFS mountpoint.
             const hashAddNode = this._module.FS.hashAddNode;
             this._module.FS.hashAddNode = (node) => {
-                if (node.mount.mountpoint === "/") return;
+                if (node?.mount?.mountpoint === "/") return;
                 hashAddNode(node);
             }
         }
@@ -81,7 +81,9 @@ export default class EmProcess extends Process {
         return this._module._main(argc, argv);
     }
 
+    running = false;
     exec(args, opts = {}) {
+        this.running = true;
         if ((typeof args) === "string") args = args.split(/ +/g);
 
         // Clang's driver uses global state, and this might not be the first time we run the module.
@@ -129,6 +131,8 @@ export default class EmProcess extends Process {
         } finally {
             allocs.forEach(p => this._module._free(p));
         }
+
+        this.running = false;
 
         return {
             returncode,

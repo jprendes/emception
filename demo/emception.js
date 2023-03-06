@@ -38,13 +38,16 @@ class Emception {
             "llvm-box": new LlvmBoxProcess(processConfig),
             "binaryen-box": new BinaryenBoxProcess(processConfig),
             "node": new NodeProcess(processConfig),
-            "python": new Python3Process(processConfig),
-            "main-python": new Python3Process(processConfig),
+            "python": [
+                new Python3Process(processConfig),
+                new Python3Process(processConfig),
+                new Python3Process(processConfig),
+            ],
         };
         this.tools = tools;
 
         for (let tool in tools) {
-            await tools[tool];
+            tools[tool] = await Promise.all([].concat(tools[tool]));
         }
     }
 
@@ -55,18 +58,15 @@ class Emception {
 
     run(...args) {
         if (args.length == 1) args = args[0].split(/ +/);
-        args = [
-            "/usr/bin/python",
-            "-E",
+        return this._run_process_impl([
             `/emscripten/${args[0]}.py`,
             ...args.slice(1)
-        ];
-        return this.tools["main-python"].exec(args, {
+        ], {
             print: (...args) => this.onstdout(...args),
             printErr: (...args) => this.onstderr(...args),
             cwd: "/working",
             path: ["/emscripten"],
-        })
+        });
     };
 
     _run_process(argv, opts = {}) {
@@ -77,13 +77,13 @@ class Emception {
     }
 
     _run_process_impl(argv, opts = {}) {
-        const in_emscripten = argv[0].match(/\/emscripten\/(.+)(\.py)?/)
-        if (in_emscripten) {
+        const emscripten_script = argv[0].match(/^(\/emscripten\/.+?)(?:\.py)?$/)?.[1]
+        if (emscripten_script && this.fileSystem.exists(`${emscripten_script}.py`)) {
             argv = [
                 "/usr/bin/python",
                 "-E",
-                `/emscripten/${in_emscripten[1]}.py`,
-                ...args.slice(1)
+                `${emscripten_script}.py`,
+                ...argv.slice(1)
             ];
         }
   
@@ -96,10 +96,11 @@ class Emception {
             return result;
         }
   
-        const tool_info = argv[0] === "/usr/bin/python" ? "python" : this.fileSystem.readFile(argv[0], {encoding: "utf8"});
+        const tool_info = this.fileSystem.readFile(argv[0], {encoding: "utf8"});
         const [tool_name, ...extra_args] = tool_info.split(";")
   
-        if (!(tool_name in this.tools)) {
+        const tool = this.tools[tool_name]?.find(p => !p.running);
+        if (!tool) {
             const result = {
                 returncode: 1,
                 stdout: "",
@@ -109,13 +110,12 @@ class Emception {
         }
   
         argv = [...extra_args, ...argv];
-  
-        const tool = this.tools[tool_name];
         const result = tool.exec(argv, {
             ...opts,
             cwd: opts.cwd || "/",
             path: ["/emscripten"]
         });
+
         this.fileSystem.push();
         return result;
     };
