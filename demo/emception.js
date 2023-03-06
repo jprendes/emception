@@ -8,6 +8,25 @@ import NodeProcess from "emception/QuickNodeProcess.mjs";
 import root_pack from "emception/root_pack.mjs";
 import lazy_cache from "emception/lazy-cache/index.mjs";
 
+const tools_info = {
+    "/usr/bin/clang":                    "llvm-box",
+    "/usr/bin/clang++":                  "llvm-box",
+    "/usr/bin/llc":                      "llvm-box",
+    "/usr/bin/lld":                      "llvm-box",
+    "/usr/bin/llvm-ar":                  "llvm-box",
+    "/usr/bin/llvm-nm":                  "llvm-box",
+    "/usr/bin/llvm-objcopy":             "llvm-box",
+    "/usr/bin/wasm-ld":                  "llvm-box",
+    "/usr/bin/node":                     "node",
+    "/usr/bin/python":                   "python",
+    "/usr/bin/wasm-as":                  "binaryen-box",
+    "/usr/bin/wasm-ctor-eval":           "binaryen-box",
+    "/usr/bin/wasm-emscripten-finalize": "binaryen-box",
+    "/usr/bin/wasm-metadce":             "binaryen-box",
+    "/usr/bin/wasm-opt":                 "binaryen-box",
+    "/usr/bin/wasm-shell":               "binaryen-box",
+};
+
 class Emception {
     fileSystem = null;
     tools = {};
@@ -96,9 +115,7 @@ class Emception {
             return result;
         }
   
-        const tool_info = this.fileSystem.readFile(argv[0], {encoding: "utf8"});
-        const [tool_name] = tool_info.split(";")
-  
+        const tool_name = tools_info[argv[0]];
         const tool = this.tools[tool_name]?.find(p => !p.running);
         if (!tool) {
             const result = {
