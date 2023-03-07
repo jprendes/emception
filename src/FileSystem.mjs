@@ -13,37 +13,32 @@ export default class FileSystem extends EmProcess {
     }
 
     async #init(cache, opts) {
-        this._brotli = new BrotliProcess({ FS: this.FS, ...opts});
-        this._cache = (async () => {
-            while (cache.endsWith("/")) {
-                cache = cache.slice(0, -1);
-            }
-            if (this.exists(cache)) return cache;
+        this._brotli = await new BrotliProcess({ FS: this.FS, ...opts});
+        while (cache.endsWith("/")) {
+            cache = cache.slice(0, -1);
+        }
+        this._cache = cache;
+        if (!this.exists(cache)) {
             this.persist(cache);
-            await this.pull();
-            return cache;
-        })();
+        }
+        await this.pull();
     }
 
-    async unpack(...paths) {
-        return Promise.all(paths.flat().map(async (path) => {
-            const buffer = this.FS.readFile(path, { encoding: "binary" });
+    unpack(...paths) {
+        paths.flat().map((path) => {
             if (path.endsWith(".br")) {
-                // it's a brotli file, decompress it
-                const brotli = await this._brotli;
-                this.FS.writeFile("/tmp/archive.pack.br", buffer);
-                await brotli.exec(["brotli", "--decompress", "/tmp/archive.pack.br"], { cwd: "/tmp/" });
-                this.FS.unlink("/tmp/archive.pack.br");
+                // it's a brotli file, decompress it first
+                this._brotli.exec(["brotli", "--decompress", "-o", "/tmp/archive.pack", path], { cwd: "/tmp/" });
+                this.exec(["wasm-package", "unpack", "/tmp/archive.pack"], { cwd: "/" });
+                this.FS.unlink("/tmp/archive.pack");
             } else {
-                this.FS.writeFile("/tmp/archive.pack", buffer);
+                this.exec(["wasm-package", "unpack", path], { cwd: "/" });
             }
-            await this.exec(["wasm-package", "unpack", "/tmp/archive.pack"], { cwd: "/" });
-            this.FS.unlink("/tmp/archive.pack");
-        }));
+        });
     }
 
-    async cachedLazyFile(path, size, md5, url) {
-        const cache = await this._cache;
+    cachedLazyFile(path, size, md5, url) {
+        const cache = this._cache;
 
         if (this.exists(path)) {
             this.unlink(path);
@@ -53,9 +48,9 @@ export default class FileSystem extends EmProcess {
             this.writeFile(path, data);
         } else {
             const [, dirname = "", basename] = /(.*\/)?([^\/]*)/.exec(path);
-            createLazyFile(this.FS, dirname, basename, size, url, true, false, async (data) => {
+            createLazyFile(this.FS, dirname, basename, size, url, true, false, (data) => {
                 this.writeFile(`${cache}/${md5}`, data);
-                await this.push();
+                this.push();
             });
         }
     }
