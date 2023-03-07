@@ -35,15 +35,13 @@ class Emception {
         const fileSystem = await new FileSystem();
         this.fileSystem = fileSystem;
 
-        await fileSystem.cachedLazyFile(...root_pack);
-        await fileSystem.unpack(root_pack[0]);
-
+        fileSystem.unpack(fileSystem.cachedDownload(root_pack[3]));
         fileSystem.mkdirTree("/working");
 
         // Populate the emscripten cache
-        for (const [relpath, ...rest] of lazy_cache) {
+        for (const [relpath, , , url] of lazy_cache) {
             const path = `/emscripten/${relpath.slice(2)}`;
-            await fileSystem.cachedLazyFile(path, ...rest);
+            fileSystem.cachedLazyFile(path, url);
         }
 
         if (fileSystem.exists("/emscripten/cache/cache.lock")) {

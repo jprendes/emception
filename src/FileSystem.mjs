@@ -1,6 +1,6 @@
 import EmProcess from "./EmProcess.mjs";
 import WasmPackageModule from "./wasm-package/wasm-package.mjs";
-import createLazyFile from "./createLazyFile.mjs"
+import createLazyFile, { doXhr } from "./createLazyFile.mjs"
 import BrotliProcess from "./BrotliProcess.mjs";
 
 export default class FileSystem extends EmProcess {
@@ -37,22 +37,39 @@ export default class FileSystem extends EmProcess {
         });
     }
 
-    cachedLazyFile(path, size, md5, url) {
+    cachedDownload(url) {
         const cache = this._cache;
+        const hash = btoa(url).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+        const ext = url.replace(/^.*?(\.[^\.]+)?$/, "$1");
+        const cache_file = `${cache}/${hash}${ext}`;
+        if (!this.exists(cache_file)) {
+            const data = doXhr(url);
+            this.writeFile(cache_file, data);
+            this.push();
+        }
+        return cache_file;
+    }
 
-        if (this.exists(path)) {
-            this.unlink(path);
+    #ignorePermissions(f) {
+        const { ignorePermissions } = this.FS;
+        this.FS.ignorePermissions = true;
+        try {
+            return f();
+        } finally {
+            this.FS.ignorePermissions = ignorePermissions;
         }
-        if (this.exists(`${cache}/${md5}`)) {
-            const data = this.readFile(`${cache}/${md5}`, {encoding: "binary"});
-            this.writeFile(path, data);
-        } else {
-            const [, dirname = "", basename] = /(.*\/)?([^\/]*)/.exec(path);
-            createLazyFile(this.FS, dirname, basename, size, url, true, false, (data) => {
-                this.writeFile(`${cache}/${md5}`, data);
-                this.push();
+    }
+
+    cachedLazyFile(path, url) {
+        this.#ignorePermissions(() => {
+            createLazyFile(this.FS, path, 0o555, () => {
+                this.#ignorePermissions(() => {
+                    const cache_file = this.cachedDownload(url);
+                    const data = this.readFile(cache_file);
+                    this.writeFile(path, data);
+                });
             });
-        }
+        });
     }
 
     persist(path) {
