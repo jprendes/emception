@@ -52,19 +52,35 @@ export default class EmProcess extends AsyncInitializable(Process) {
             }
         }
 
-        this.#addErorCodeToErrnoError();
+        this.#improveErrnoError();
     }
 
-    #addErorCodeToErrnoError = () => {
+    #improveErrnoError() {
         const FS = this._module.FS;
         const ERRNO_CODES = Object.fromEntries(
             Object.entries(this._module.ERRNO_CODES)
                 .map(([k, v]) => [v, k])
         );
-        Object.defineProperty(FS.ErrnoError.prototype, "code", {
-            get: function () {
+        FS.ErrnoError = class ErrnoError extends Error {
+            constructor(errno, node) {
+                super(`FS error: ${ERRNO_CODES[errno]}`);
+                this.node = node;
+                this.setErrno(errno);
+            }
+
+            setErrno(errno) {
+                this.errno = parseInt(errno);
+            }
+
+            get code() {
                 return ERRNO_CODES[this.errno];
             }
+        }
+        Object.keys(FS.genericErrors).forEach((code) => {
+            code = parseInt(code);
+            Object.defineProperty(FS.genericErrors, code, {
+                get: () => new FS.ErrnoError(code)
+            });
         });
     }
 
