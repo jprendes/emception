@@ -1,6 +1,6 @@
 import EmProcess from "./EmProcess.mjs";
 import WasmPackageModule from "./wasm-package/wasm-package.mjs";
-import createLazyFile, { doXhr } from "./createLazyFile.mjs"
+import createLazyFile, { createLazyFolder, doXhr } from "./createLazyFile.mjs"
 import BrotliProcess from "./BrotliProcess.mjs";
 
 export default class FileSystem extends EmProcess {
@@ -24,17 +24,15 @@ export default class FileSystem extends EmProcess {
         await this.pull();
     }
 
-    unpack(...paths) {
-        paths.flat().map((path) => {
-            if (path.endsWith(".br")) {
-                // it's a brotli file, decompress it first
-                this._brotli.exec(["brotli", "--decompress", "-o", "/tmp/archive.pack", path], { cwd: "/tmp/" });
-                this.exec(["wasm-package", "unpack", "/tmp/archive.pack"], { cwd: "/" });
-                this.FS.unlink("/tmp/archive.pack");
-            } else {
-                this.exec(["wasm-package", "unpack", path], { cwd: "/" });
-            }
-        });
+    unpack(path, cwd = "/") {
+        if (path.endsWith(".br")) {
+            // it's a brotli file, decompress it first
+            this._brotli.exec(["brotli", "--decompress", "-o", "/tmp/archive.pack", path], { cwd: "/tmp/" });
+            this.exec(["wasm-package", "unpack", "/tmp/archive.pack"], { cwd });
+            this.FS.unlink("/tmp/archive.pack");
+        } else {
+            this.exec(["wasm-package", "unpack", path], { cwd });
+        }
     }
 
     cachedDownload(url) {
@@ -60,15 +58,35 @@ export default class FileSystem extends EmProcess {
         }
     }
 
-    cachedLazyFile(path, url) {
+    #lazyLoadsDone = new Set();
+    #lazyLoad(path, url, packaged = false) {
         this.#ignorePermissions(() => {
-            createLazyFile(this.FS, path, 0o555, () => {
-                this.#ignorePermissions(() => {
-                    const cache_file = this.cachedDownload(url);
+            if (this.#lazyLoadsDone.has(url)) return;
+            this.#lazyLoadsDone.add(url);
+            try {
+                const cache_file = this.cachedDownload(url);
+                if (packaged) {
+                    this.unpack(cache_file, path);
+                } else {
                     const data = this.readFile(cache_file);
                     this.writeFile(path, data);
-                });
-            });
+                }
+            } catch (e) {
+                this.#lazyLoadsDone.delete(url);
+                throw e;
+            }
+        });
+    }
+
+    cachedLazyFile(path, url, mode = 0o555) {
+        this.#ignorePermissions(() => {
+            createLazyFile(this.FS, path, mode, () => this.#lazyLoad(path, url, false));
+        });
+    }
+
+    cachedLazyFolder(path, url, mode = 0o777, package_root = "/") {
+        this.#ignorePermissions(() => {
+            createLazyFolder(this.FS, path, mode, () => this.#lazyLoad(package_root, url, true));
         });
     }
 
@@ -97,6 +115,9 @@ export default class FileSystem extends EmProcess {
     }
     writeFile(...args) {
         return this.FS.writeFile(...args)
+    }
+    symlink(oldPath, newPath) {
+        return this.FS.symlink(oldPath, newPath);
     }
 
     #pull = null;

@@ -69,3 +69,48 @@ export default function createLazyFile(FS, path, mode, loadFnc) {
 
     return node;
 }
+
+export function createLazyFolder(FS, path, mode, loadFnc) {
+    if (FS.analyzePath(path).exists) return;
+
+    let loaded = false;
+
+    var node = FS.mkdir(path, mode);
+    let { contents } = node;
+
+    const ensure_content = () =>  {
+        if (loaded) return;
+        try {
+            loaded = true;
+            loadFnc();
+        } catch (e) {
+            loaded = false;
+            throw e;
+        }
+    };
+
+    Object.defineProperties(node, {
+        contents: {
+            get: () => {
+                ensure_content();
+                return contents;
+            },
+            set: (val) => {
+                ensure_content();
+                contents = val;
+            },
+        },
+    });
+
+    const original_lookup = node.node_ops.lookup;
+    node.node_ops = {
+        ...node.node_ops,
+        lookup: (parent, name) => {
+            ensure_content();
+            node.node_ops.lookup = original_lookup;
+            return FS.lookupNode(parent, name);
+        }
+    };
+
+    return node;
+}

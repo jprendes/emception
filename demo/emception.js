@@ -35,7 +35,9 @@ class Emception {
         const fileSystem = await new FileSystem();
         this.fileSystem = fileSystem;
 
-        fileSystem.unpack(fileSystem.cachedDownload(root_pack[3]));
+        fileSystem.cachedLazyFolder("/emscripten", root_pack[3]);
+        fileSystem.cachedLazyFolder("/usr", root_pack[3]);
+        fileSystem.cachedLazyFolder("/wasm", root_pack[3]);
         fileSystem.mkdirTree("/working");
 
         // Populate the emscripten cache
