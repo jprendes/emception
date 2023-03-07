@@ -9,11 +9,10 @@ export default class FileSystem extends EmProcess {
 
     constructor({ cache = "/cache", ...opts } = {}) {
         super(WasmPackageModule, { ...opts });
-        this.#init(cache, opts);
+        this.init.push(this.#init.bind(this, cache, opts));
     }
 
-    #init = async (cache, opts) => {
-        await this;
+    async #init(cache, opts) {
         this._brotli = new BrotliProcess({ FS: this.FS, ...opts});
         this._cache = (async () => {
             while (cache.endsWith("/")) {

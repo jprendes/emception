@@ -1,6 +1,7 @@
 import Process from "./Process.mjs";
+import AsyncInitializable from "./AsyncInitializable.mjs";
 
-export default class EmProcess extends Process {
+export default class EmProcess extends AsyncInitializable(Process) {
     _module = null;
     _memory = null;
 
@@ -19,16 +20,10 @@ export default class EmProcess extends Process {
             onprint,
             onprintErr,
         });
-        this.ready = this.#init(Module, FS, { onrunprocess, ...opts });
-
-        const promise = this.ready.then(() => {
-            delete this.then;
-            return this;
-        });
-        this.then = (...args) => promise.then(...args);
+        this.init.push(() => this.#init(Module, FS, { onrunprocess, ...opts }));
     }
 
-    #init = async (Module, FS, opts) => {
+    async #init(Module, FS, opts) {
         const fsroot = FS && {
             ROOT: {
                 type: "PROXYFS",
