@@ -25,7 +25,9 @@ if [ ! -d $BROTLI_SRC/ ]; then
     
     # This is the last tested commit of brotli.
     # Feel free to try with a newer version
-    git reset --hard 62662f87cdd96deda90ac817de94e3c4af75226a
+    COMMIT=62662f87cdd96deda90ac817de94e3c4af75226a
+    git fetch origin $COMMIT
+    git reset --hard $COMMIT
 
     popd
 fi

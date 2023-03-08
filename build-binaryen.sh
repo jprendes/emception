@@ -25,7 +25,9 @@ if [ ! -d $BINARYEN_SRC/ ]; then
 
     # This is the last tested commit of binaryen.
     # Feel free to try with a newer version
-    git reset --hard 8ab8e40d15a4d9f28ced76d28232f9e791f161d3
+    COMMIT=8ab8e40d15a4d9f28ced76d28232f9e791f161d3
+    git fetch origin $COMMIT
+    git reset --hard $COMMIT
 
     git submodule init
     git submodule update

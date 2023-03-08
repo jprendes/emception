@@ -26,7 +26,9 @@ if [ ! -d $CPYTHON_SRC/ ]; then
 
     # This is the last tested commit of cpython.
     # Feel free to try with a newer version
-    git reset --hard b8a9f13abb61bd91a368e2d3f339de736863050f
+    COMMIT=b8a9f13abb61bd91a368e2d3f339de736863050f
+    git fetch origin $COMMIT
+    git reset --hard $COMMIT
 
     popd
 fi
