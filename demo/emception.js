@@ -111,22 +111,13 @@ class Emception {
             ];
         }
   
-        if (!this.fileSystem.exists(argv[0])) {
-            const result = {
-                returncode: 1,
-                stdout: "",
-                stderr: `Executable not found: ${JSON.stringify(argv[0])}`,
-            };
-            return result;
-        }
-  
         const tool_name = tools_info[argv[0]];
         const tool = this.tools[tool_name]?.find(p => !p.running);
         if (!tool) {
             const result = {
                 returncode: 1,
                 stdout: "",
-                stderr: `File is not executable: ${JSON.stringify(argv[0])}`,
+                stderr: `Emception tool not found: ${JSON.stringify(argv[0])}`,
             };
             return result;
         }
