@@ -6,7 +6,6 @@ import Python3Process from "emception/Python3Process.mjs";
 import NodeProcess from "emception/QuickNodeProcess.mjs";
 
 import root_pack from "emception/root_pack.mjs";
-import lazy_cache from "emception/lazy-cache/index.mjs";
 
 const tools_info = {
     "/usr/bin/clang":                    "llvm-box",
@@ -35,19 +34,22 @@ class Emception {
         const fileSystem = await new FileSystem();
         this.fileSystem = fileSystem;
 
-        fileSystem.cachedLazyFolder("/emscripten", root_pack[3]);
-        fileSystem.cachedLazyFolder("/usr", root_pack[3]);
-        fileSystem.cachedLazyFolder("/wasm", root_pack[3]);
-        fileSystem.mkdirTree("/working");
-
-        // Populate the emscripten cache
-        for (const [relpath, , , url] of lazy_cache) {
-            const path = `/emscripten/${relpath.slice(2)}`;
-            fileSystem.cachedLazyFile(path, url);
+        fileSystem.mkdirTree("/lazy");
+        for (const [name, url] of Object.entries(root_pack)) {
+            fileSystem.cachedLazyFolder(`/lazy/${name}`, url, 0o777, `/lazy/${name}`);
         }
 
-        if (fileSystem.exists("/emscripten/cache/cache.lock")) {
-            fileSystem.unlink("/emscripten/cache/cache.lock");
+        fileSystem.mkdirTree("/usr/local");
+        fileSystem.symlink("/lazy/emscripten", "/emscripten");
+        fileSystem.symlink("/lazy/cpython", "/usr/local/lib");
+        fileSystem.symlink("/lazy/wasm", "/wasm");
+
+        fileSystem.mkdirTree("/working");
+
+        fileSystem.mkdirTree("/usr/bin");
+        for (const tool of Object.keys(tools_info)) {
+            // Emscripten checks the existence of a few of these files
+            fileSystem.writeFile(tool, "");
         }
 
         const processConfig = {
@@ -101,7 +103,7 @@ class Emception {
     }
 
     _run_process_impl(argv, opts = {}) {
-        const emscripten_script = argv[0].match(/^(\/emscripten\/.+?)(?:\.py)?$/)?.[1]
+        const emscripten_script = argv[0].match(/^((\/lazy)?\/emscripten\/.+?)(?:\.py)?$/)?.[1]
         if (emscripten_script && this.fileSystem.exists(`${emscripten_script}.py`)) {
             argv = [
                 "/usr/bin/python",

@@ -11,12 +11,17 @@ BUILD=$(realpath "$BUILD")
 
 mkdir -p $BUILD/packs/cpython/
 
-cp -Rf $BUILD/cpython/usr $BUILD/packs/cpython/
+UPSTREAM_CPYTHON_STDLIB_ZIP=$(echo $BUILD/cpython/usr/local/lib/python3*.zip)
+UPSTREAM_CPYTHON_STDLIB_ROOT=$(echo $BUILD/cpython/usr/local/lib/python3.*)
 
-CPYTHON_STDLIB_ROOT=$(echo $BUILD/packs/cpython/usr/local/lib/python3.*)
+cp -Rf $UPSTREAM_CPYTHON_STDLIB_ROOT $BUILD/packs/cpython/
+
+CPYTHON_STDLIB_ROOT=$(echo $BUILD/packs/cpython/python3.*)
 mkdir -p $CPYTHON_STDLIB_ROOT/site-packages
 cp -f $SRC/sitecustomize.py $CPYTHON_STDLIB_ROOT/site-packages/
 
+unzip -q "$UPSTREAM_CPYTHON_STDLIB_ZIP" -d "$CPYTHON_STDLIB_ROOT"
+
 pushd $BUILD/packs/cpython
-cd usr && $BUILD/tooling/wasm-package pack ./cpython.pack $(find ./)
+$BUILD/tooling/wasm-package pack ../cpython.pack $(find ./python3.*/)
 popd

@@ -37,50 +37,30 @@ cp $BUILD/wasm-package/wasm-package.{mjs,wasm} $BUILD/emception/wasm-package/
 
 $SRC/build-packs.sh $BUILD
 
-if [ "$EMCEPTION_NO_COMPRESS" == "1" ]; then
-    # Do not use brotli compressed root.pack
-    MD5="$(md5sum "$BUILD/packs/root.pack")"
-    MD5="${MD5%% *}"
-    SIZE="$(stat --printf="%s" "$BUILD/packs/root.pack")"
-    {
-        echo "import root_pack_url from \"./root.pack\";"
-        echo -n 'export default ['
-        echo -n "\"/root.pack\""
-        echo -n ','
-        echo -n "$SIZE"
-        echo -n ','
-        echo -n "$MD5" | jq -sR | tr -d '\n'
-        echo -n ','
-        echo -n "root_pack_url"
-        echo '];'
-    } > "$BUILD/packs/root_pack.mjs"
-else
-    # Use brotli compressed root.pack
-    brotli --best --keep $BUILD/packs/root.pack
-    MD5="$(md5sum "$BUILD/packs/root.pack.br")"
-    MD5="${MD5%% *}"
-    SIZE="$(stat --printf="%s" "$BUILD/packs/root.pack.br")"
-    {
-        echo "import root_pack_url from \"./root.pack.br\";"
-        echo -n 'export default ['
-        echo -n "\"/root.pack.br\""
-        echo -n ','
-        echo -n "$SIZE"
-        echo -n ','
-        echo -n "$MD5" | jq -sR | tr -d '\n'
-        echo -n ','
-        echo -n "root_pack_url"
-        echo '];'
-    } > "$BUILD/packs/root_pack.mjs"
-fi
+mkdir -p $BUILD/emception/packages
+cp $BUILD/packs/*.pack $BUILD/emception/packages
 
-cp -f "$BUILD/packs/root.pack" "$BUILD/emception/"
-cp -f "$BUILD/packs/root.pack.br" "$BUILD/emception/"
-cp -f "$BUILD/packs/root_pack.mjs" "$BUILD/emception/"
+IMPORTS=""
+EXPORTS=""
+for PACK in $BUILD/emception/packages/*.pack; do
+    PACK=$(basename $PACK .pack)
+    NAME=$(echo $PACK | sed 's/[^a-zA-Z0-9_]/_/g')
+    EXT=".pack"
 
-cp -f -R "$BUILD/packs/emscripten/emscripten/lazy-cache" "$BUILD/emception/"
-
-{
-    echo 'import lazy_cache from "./lazy-cache/index.mjs";'
-    echo 'export default lazy_cache;'
-} > "$BUILD/emception/lazy-cache.mjs"
+    if [ "$EMCEPTION_NO_COMPRESS" != "1" ]; then
+        # Use brotli compressed packages
+        if [ ! -f "$BUILD/emception/packages/$PACK.pack.br" ]; then
+            brotli --best --keep $BUILD/emception/packages/$PACK.pack
+        fi
+        EXT=".pack.br"
+    fi
+    IMPORTS=$(printf \
+        "%s\nimport %s from \"./packages/%s\";" \
+        "$IMPORTS" "$NAME" "$PACK$EXT" \
+    )
+    EXPORTS=$(printf \
+        "%s\n    \"%s\": %s," \
+        "$EXPORTS" "$PACK" "$NAME" \
+    )
+done
+printf '%s\nexport default {%s\n};' "$IMPORTS" "$EXPORTS" > "$BUILD/emception/root_pack.mjs"

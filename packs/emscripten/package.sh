@@ -14,5 +14,14 @@ mkdir -p $BUILD/packs/emscripten
 
 pushd $BUILD/packs/emscripten
 $SRC/make.sh # builds files in the current working directory
-cd emscripten && $BUILD/tooling/wasm-package pack $BUILD/packs/emscripten/emscripten.pack $(find ./ | grep -v "^./lazy-cache")
+
+for PACK in ./*; do
+    if [ -d "$PACK" ]; then
+        PACK=$(basename $PACK)
+        pushd $PACK
+            $BUILD/tooling/wasm-package pack ../../$PACK.pack $(find .)
+        popd
+    fi
+done
+
 popd
