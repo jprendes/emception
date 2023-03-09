@@ -64,7 +64,12 @@ export default function createLazyFile(FS, path, mode, loadFnc) {
                 ensure_content();
                 usedBytes = val;
             },
-        }
+        },
+        loaded: {
+            get: () => {
+                return loaded;
+            },
+        },
     });
 
     return node;
@@ -98,6 +103,11 @@ export function createLazyFolder(FS, path, mode, loadFnc) {
             set: (val) => {
                 ensure_content();
                 contents = val;
+            },
+        },
+        loaded: {
+            get: () => {
+                return loaded;
             },
         },
     });
