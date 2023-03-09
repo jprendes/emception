@@ -84,7 +84,7 @@ export default class FileSystem extends EmProcess {
         });
     }
 
-    cachedLazyFolder(path, url, mode = 0o777, package_root = "/") {
+    cachedLazyFolder(path, url, mode = 0o777, package_root = path) {
         this.#ignorePermissions(() => {
             createLazyFolder(this.FS, path, mode, () => this.#lazyLoad(package_root, url, true));
         });

@@ -14,5 +14,5 @@ mkdir -p $BUILD/packs/wasm
 
 pushd $BUILD/packs/wasm
 $SRC/make.sh # builds files in the current working directory
-$BUILD/tooling/wasm-package pack $BUILD/packs/wasm/wasm.pack $(find wasm/)
+cd wasm && $BUILD/tooling/wasm-package pack ../../wasm.pack $(find .)
 popd

@@ -18,5 +18,5 @@ mkdir -p $CPYTHON_STDLIB_ROOT/site-packages
 cp -f $SRC/sitecustomize.py $CPYTHON_STDLIB_ROOT/site-packages/
 
 pushd $BUILD/packs/cpython
-$BUILD/tooling/wasm-package pack ./cpython.pack $(find usr/)
+cd usr && $BUILD/tooling/wasm-package pack ./cpython.pack $(find ./)
 popd
