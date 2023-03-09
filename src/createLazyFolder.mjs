@@ -1,7 +1,7 @@
 // Modified version of createLazyFile from Emscripten's FS
 // https://github.com/emscripten-core/emscripten/blob/main/src/library_fs.js
 
-export function doXhr(url) {
+function doFetchSync(url) {
     // TODO: Use mozResponseArrayBuffer, responseStream, etc. if available.
     const xhr = new XMLHttpRequest();
     xhr.open("GET", url, false);
@@ -20,62 +20,21 @@ export function doXhr(url) {
     return new Uint8Array(xhr.response);
 }
 
+async function doFetchAsync(url) {
+    const res = await fetch(url);
+    const buf = await res.arrayBuffer();
+    return new Uint8Array(buf);
+}
+
+export function doFetch(url, async = false) {
+    return async ? doFetchAsync(url) : doFetchSync(url);
+}
+
 if (!globalThis.XMLHttpRequest) {
     throw new Error("Cannot do synchronous binary XHRs outside webworkers in modern browsers.");
 }
 
-export default function createLazyFile(FS, path, mode, loadFnc) {
-    if (FS.analyzePath(path).exists) return;
-
-    let loaded = false;
-
-    var node = FS.create(path, mode);
-    let contents = new Uint8Array(0);
-    let usedBytes = 0;
-
-    const ensure_content = () =>  {
-        if (loaded) return;
-        try {
-            loaded = true;
-            loadFnc();
-        } catch (e) {
-            loaded = false;
-            throw e;
-        }
-    };
-
-    Object.defineProperties(node, {
-        contents: {
-            get: () => {
-                ensure_content();
-                return contents;
-            },
-            set: (val) => {
-                ensure_content();
-                contents = val;
-            },
-        },
-        usedBytes: {
-            get: () => {
-                ensure_content();
-                return usedBytes;
-            },
-            set: (val) => {
-                ensure_content();
-                usedBytes = val;
-            },
-        },
-        loaded: {
-            get: () => {
-                return loaded;
-            },
-        },
-    });
-
-    return node;
-}
-
-export function createLazyFolder(FS, path, mode, loadFnc) {
+export default function createLazyFolder(FS, path, mode, loadFnc) {
     if (FS.analyzePath(path).exists) return;
 
     let loaded = false;

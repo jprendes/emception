@@ -26,6 +26,30 @@ const tools_info = {
     "/usr/bin/wasm-shell":               "binaryen-box",
 };
 
+// packages needed for the startup example
+const preloads = [
+    "cpython",
+    "emscripten",
+    "emscripten_node_modules",
+    "emscripten_sysroot_lib_wasm32-emscripten_libGL.a",
+    "emscripten_sysroot_lib_wasm32-emscripten_libal.a",
+    "emscripten_sysroot_lib_wasm32-emscripten_libc++.a",
+    "emscripten_sysroot_lib_wasm32-emscripten_libc++abi.a",
+    "emscripten_sysroot_lib_wasm32-emscripten_libc.a",
+    "emscripten_sysroot_lib_wasm32-emscripten_libcompiler_rt.a",
+    "emscripten_sysroot_lib_wasm32-emscripten_libdlmalloc.a",
+    "emscripten_sysroot_lib_wasm32-emscripten_libhtml5.a",
+    "emscripten_sysroot_lib_wasm32-emscripten_libsockets.a",
+    "emscripten_sysroot_lib_wasm32-emscripten_libstubs.a",
+    "emscripten_system_include",
+    "emscripten_system_include_SDL",
+    "emscripten_system_include_compat",
+    "emscripten_system_lib_compiler-rt_lib",
+    "emscripten_system_lib_libcxx_include",
+    "emscripten_third_party",
+    "wasm"
+];
+
 class Emception {
     fileSystem = null;
     tools = {};
@@ -43,6 +67,8 @@ class Emception {
         fileSystem.symlink("/lazy/emscripten", "/emscripten");
         fileSystem.symlink("/lazy/cpython", "/usr/local/lib");
         fileSystem.symlink("/lazy/wasm", "/wasm");
+
+        await Promise.all(preloads.map((preload) => fileSystem.preloadLazy(`/lazy/${preload}`)));
 
         fileSystem.mkdirTree("/working");
 

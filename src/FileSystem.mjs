@@ -1,6 +1,7 @@
 import EmProcess from "./EmProcess.mjs";
 import WasmPackageModule from "./wasm-package/wasm-package.mjs";
-import createLazyFile, { createLazyFolder, doXhr } from "./createLazyFile.mjs"
+import createLazyFolder, { doFetch } from "./createLazyFolder.mjs"
+import Thenable from "./Thenable.mjs";
 import BrotliProcess from "./BrotliProcess.mjs";
 
 export default class FileSystem extends EmProcess {
@@ -35,17 +36,17 @@ export default class FileSystem extends EmProcess {
         }
     }
 
-    cachedDownload(url) {
+    #cachedDownload(url, async = false) {
         const cache = this._cache;
         const hash = btoa(url).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
         const ext = url.replace(/^.*?(\.[^\.]+)?$/, "$1");
         const cache_file = `${cache}/${hash}${ext}`;
-        if (!this.exists(cache_file)) {
-            const data = doXhr(url);
+        if (this.exists(cache_file)) return new Thenable(cache_file);
+        return new Thenable(doFetch(url, async)).then((data) => {
             this.writeFile(cache_file, data);
             this.push();
-        }
-        return cache_file;
+            return cache_file;
+        });
     }
 
     #ignorePermissions(f) {
@@ -58,35 +59,39 @@ export default class FileSystem extends EmProcess {
         }
     }
 
+    #lazyLoads = new Map();
     #lazyLoadsDone = new Set();
-    #lazyLoad(path, url, packaged = false) {
-        this.#ignorePermissions(() => {
-            if (this.#lazyLoadsDone.has(url)) return;
-            this.#lazyLoadsDone.add(url);
-            try {
-                const cache_file = this.cachedDownload(url);
-                if (packaged) {
-                    this.unpack(cache_file, path);
-                } else {
-                    const data = this.readFile(cache_file);
-                    this.writeFile(path, data);
+
+    #lazyLoad(path, url, packaged = false, async = false) {
+        if (this.#lazyLoadsDone.has(url)) return;
+        return this.#cachedDownload(url, async).then((cache_file) => {
+            this.#ignorePermissions(() => {
+                if (this.#lazyLoadsDone.has(url)) return;
+                this.#lazyLoadsDone.add(url);
+                try {
+                    if (packaged) {
+                        this.unpack(cache_file, path);
+                    } else {
+                        const data = this.readFile(cache_file);
+                        this.writeFile(path, data);
+                    }
+                } catch (e) {
+                    this.#lazyLoadsDone.delete(url);
+                    throw e;
                 }
-            } catch (e) {
-                this.#lazyLoadsDone.delete(url);
-                throw e;
-            }
+            });
         });
     }
 
-    cachedLazyFile(path, url, mode = 0o555) {
-        this.#ignorePermissions(() => {
-            createLazyFile(this.FS, path, mode, () => this.#lazyLoad(path, url, false));
-        });
+    preloadLazy(path, async = true) {
+        const [root, url, packaged] = this.#lazyLoads.get(path);
+        return this.#lazyLoad(root, url, packaged, async);
     }
 
     cachedLazyFolder(path, url, mode = 0o777, package_root = path) {
+        this.#lazyLoads.set(path, [package_root, url, true]);
         this.#ignorePermissions(() => {
-            createLazyFolder(this.FS, path, mode, () => this.#lazyLoad(package_root, url, true));
+            createLazyFolder(this.FS, path, mode, () => this.preloadLazy(path, false));
         });
     }
 
