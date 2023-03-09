@@ -63,4 +63,4 @@ for PACK in $BUILD/emception/packages/*.pack; do
         "$EXPORTS" "$PACK" "$NAME" \
     )
 done
-printf '%s\nexport default {%s\n};' "$IMPORTS" "$EXPORTS" > "$BUILD/emception/root_pack.mjs"
+printf '%s\nexport default {%s\n};' "$IMPORTS" "$EXPORTS" > "$BUILD/emception/packs.mjs"
