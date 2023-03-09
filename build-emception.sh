@@ -40,20 +40,22 @@ $SRC/build-packs.sh $BUILD
 mkdir -p $BUILD/emception/packages
 cp $BUILD/packs/*.pack $BUILD/emception/packages
 
+EXT=".pack"
+if [ "$EMCEPTION_NO_COMPRESS" != "1" ]; then
+    # Use brotli compressed packages
+    EXT=".pack.br"
+    for PACK in $BUILD/emception/packages/*.pack; do
+        PACK=$(basename $PACK .pack)
+        brotli --best --keep $BUILD/emception/packages/$PACK.pack &
+    done
+    wait
+fi
+
 IMPORTS=""
 EXPORTS=""
 for PACK in $BUILD/emception/packages/*.pack; do
     PACK=$(basename $PACK .pack)
     NAME=$(echo $PACK | sed 's/[^a-zA-Z0-9_]/_/g')
-    EXT=".pack"
-
-    if [ "$EMCEPTION_NO_COMPRESS" != "1" ]; then
-        # Use brotli compressed packages
-        if [ ! -f "$BUILD/emception/packages/$PACK.pack.br" ]; then
-            brotli --best --keep $BUILD/emception/packages/$PACK.pack
-        fi
-        EXT=".pack.br"
-    fi
     IMPORTS=$(printf \
         "%s\nimport %s from \"./packages/%s\";" \
         "$IMPORTS" "$NAME" "$PACK$EXT" \
