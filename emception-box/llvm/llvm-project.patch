@@ -1,0 +1,15 @@
+diff --git a/clang/lib/Driver/Job.cpp b/clang/lib/Driver/Job.cpp
+index c34ae13a5fc5..bef644609ce5 100644
+--- a/clang/lib/Driver/Job.cpp
++++ b/clang/lib/Driver/Job.cpp
+@@ -400,8 +400,8 @@ int CC1Command::Execute(ArrayRef<llvm::Optional<StringRef>> Redirects,
+   // FIXME: Currently, if there're more than one job, we disable
+   // -fintegrate-cc1. If we're no longer a integrated-cc1 job, fallback to
+   // out-of-process execution. See discussion in https://reviews.llvm.org/D74447
+-  if (!InProcess)
+-    return Command::Execute(Redirects, ErrMsg, ExecutionFailed);
++  // if (!InProcess)
++  //   return Command::Execute(Redirects, ErrMsg, ExecutionFailed);
+ 
+   PrintFileNames();
+ 

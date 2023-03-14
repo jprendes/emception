@@ -1,0 +1,113 @@
+diff --git a/Modules/Setup.stdlib.in b/Modules/Setup.stdlib.in
+index ac8959ebea..1c9f38cec4 100644
+--- a/Modules/Setup.stdlib.in
++++ b/Modules/Setup.stdlib.in
+@@ -118,6 +118,7 @@
+ # needs sys/soundcard.h or linux/soundcard.h (Linux, FreeBSD)
+ @MODULE_OSSAUDIODEV_TRUE@ossaudiodev ossaudiodev.c
+ @MODULE__POSIXSUBPROCESS_TRUE@_posixsubprocess _posixsubprocess.c
++@MODULE__EMCEPTION_TRUE@_emception _emception.c
+ @MODULE_RESOURCE_TRUE@resource resource.c
+ @MODULE_SELECT_TRUE@select selectmodule.c
+ @MODULE__SOCKET_TRUE@_socket socketmodule.c
+diff --git a/Modules/_emception.c b/Modules/_emception.c
+new file mode 100644
+index 0000000000..094a132f69
+--- /dev/null
++++ b/Modules/_emception.c
+@@ -0,0 +1,69 @@
++#ifndef Py_BUILD_CORE_BUILTIN
++#  define Py_BUILD_CORE_MODULE 1
++#endif
++
++#include "Python.h"
++
++PyDoc_STRVAR(module_doc,
++"An Emception helper module.");
++
++#if !defined(__EMSCRIPTEN__)
++#error Emception must be compiled with Emscripten
++#endif // !defined(__EMSCRIPTEN__)
++
++#include <emscripten.h>
++
++PyDoc_STRVAR(emception_eval_doc,
++"eval(code)\n\
++\n\
++Evaluate javascript code.\n\
++");
++
++EM_JS(char *, emception_eval_impl, (const char *code), {
++    return allocateUTF8(JSON.stringify(eval(UTF8ToString(code))) || "");
++})
++
++static PyObject *
++emception_eval(PyObject *module, PyObject *args)
++{
++    const char *code = NULL;
++    const char *result = NULL;
++    PyObject * ret = NULL;
++
++    if (!PyArg_ParseTuple(args, "s:emception_eval", &code))
++        return NULL;
++
++    result = emception_eval_impl(code);
++    ret = PyUnicode_FromFormat("%s", result);
++    free((void*)result);
++
++    return ret;
++}
++
++static struct PyModuleDef _emceptionmodule;
++
++/* module level code ********************************************************/
++
++static PyMethodDef module_methods[] = {
++    {"eval", emception_eval, METH_VARARGS, emception_eval_doc},
++    {NULL, NULL}  /* sentinel */
++};
++
++static PyModuleDef_Slot _emception_slots[] = {
++    {0, NULL}
++};
++
++static struct PyModuleDef _emceptionmodule = {
++        PyModuleDef_HEAD_INIT,
++        .m_name = "_emception",
++        .m_doc = module_doc,
++        .m_size = 0,
++        .m_methods = module_methods,
++        .m_slots = _emception_slots,
++};
++
++PyMODINIT_FUNC
++PyInit__emception(void)
++{
++    return PyModuleDef_Init(&_emceptionmodule);
++}
+\ No newline at end of file
+diff --git a/configure.ac b/configure.ac
+index c7945aaf85..57e772bf44 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -7152,6 +7168,11 @@ AS_CASE([$ac_sys_system],
+   [PY_STDLIB_MOD_SET_NA([_scproxy])]
+ )
+ 
++AS_CASE([$ac_sys_system],
++  [Emscripten], [],
++  [PY_STDLIB_MOD_SET_NA(_emception)]
++)
++
+ dnl AC_MSG_NOTICE([m4_set_list([_PY_STDLIB_MOD_SET_NA])])
+ 
+ dnl Default value for Modules/Setup.stdlib build type
+@@ -7240,6 +7261,8 @@ PY_STDLIB_MOD_SIMPLE([_typing])
+ PY_STDLIB_MOD_SIMPLE([_xxsubinterpreters])
+ PY_STDLIB_MOD_SIMPLE([_zoneinfo])
+ 
++PY_STDLIB_MOD_SIMPLE([_emception])
++
+ dnl multiprocessing modules
+ PY_STDLIB_MOD([_multiprocessing],
+   [], [test "$ac_cv_func_sem_unlink" = "yes"],

@@ -1,0 +1,16 @@
+
+.PHONY: emception-python
+emception-python: libpython-bundle.a;
+
+libpython-bundle.a: $(LIBRARY) $(filter %.a,$(LIBS)) $(filter %.a,$(MODLIBS)) $(filter %.a,$(SYSLIBS))
+	printf 'create libpython-bundle.a\n' > libpython-bundle.mri
+	printf 'addlib %s\n' $^ >> libpython-bundle.mri
+	printf 'save\n' $^ >> libpython-bundle.mri
+	printf 'end\n' $^ >> libpython-bundle.mri
+	$(AR) -M < libpython-bundle.mri
+
+pythonstdlib.zip: wasm_stdlib
+	rm -f .$(prefix)/lib/pythonstdlib.zip
+	cd .$(prefix)/lib/ && cp -f python*.zip pythonstdlib.zip
+	cd .$(prefix)/lib/python$(VERSION)/ && zip ../pythonstdlib.zip -r ./*
+	mv -f .$(prefix)/lib/pythonstdlib.zip ./
