@@ -1,5 +1,7 @@
+set(BOXIFY_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR})
+
 function(boxify BOX_NAME)
-    add_executable(${BOX_NAME} ${CMAKE_CURRENT_BINARY_DIR}/box.cpp)
+    add_executable(${BOX_NAME} ${BOXIFY_SOURCE_DIR}/box.cpp)
     target_compile_features(${BOX_NAME} PRIVATE cxx_std_17)
     set_target_properties(${BOX_NAME} PROPERTIES SUFFIX ".mjs")
     boxify_add(${BOX_NAME} ${ARGN})
@@ -31,18 +33,3 @@ function(boxify_add BOX_NAME)
         target_link_libraries(${BOX_NAME} ${SUBTARGET_LIBS})
     endforeach()
 endfunction()
-
-file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/box.cpp CONTENT "
-#include <string>
-#include <unordered_map>
-inline std::unordered_map<std::string, int (*)(int,const char **)> _boxify_entrypoints_map;
-
-int main(int argc, const char ** argv) {
-    if (argc < 1) return 1;
-    const char * argv0 = argv[0];
-    --argc;
-    ++argv;
-    if (_boxify_entrypoints_map.count(argv0) == 0) return 1;
-    return _boxify_entrypoints_map.at(argv0)(argc, argv);
-}
-")
