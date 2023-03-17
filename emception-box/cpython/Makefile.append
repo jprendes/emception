@@ -1,7 +1,4 @@
 
-.PHONY: emception-python
-emception-python: libpython-bundle.a;
-
 libpython-bundle.a: $(LIBRARY) $(filter %.a,$(LIBS)) $(filter %.a,$(MODLIBS)) $(filter %.a,$(SYSLIBS))
 	printf 'create libpython-bundle.a\n' > libpython-bundle.mri
 	printf 'addlib %s\n' $^ >> libpython-bundle.mri

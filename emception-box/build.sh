@@ -2,16 +2,32 @@
 
 export PATH="${EMSDK}/upstream/bin:${PATH}"
 
-emcmake cmake -G Ninja -B ./build/ -S ./emception-box/ -DCMAKE_BUILD_TYPE=MinSizeRel
+emcmake cmake -G Ninja -B ./build/ -S ./emception-box/ -Wno-dev -DFETCH_CACHE_DIR=$PWD/.cache -DCMAKE_BUILD_TYPE=MinSizeRel
 cmake --build ./build/ -- emception-box package-box
 
 node --input-type=module <<EOF
-import EmceptionBox from "./build/emception-box.mjs";
-EmceptionBox({
-  thisProgram: "wasm-opt",
-  arguments: ["wasm-opt", "--version"],
-})
+import EmceptionBox from "./build/emception-box/emception-box.mjs";
+
+for (let i = 0; i < 10; ++i) {
+  for (const thisProgram of ["wasm-opt", "python", "clang", "lld", "node", "wasm-as"]) {
+    console.log([i, thisProgram]);
+    await EmceptionBox({
+      thisProgram,
+      arguments: [thisProgram === "lld" ? "wasm-ld" : thisProgram, "--version"],
+    });
+  }
+}
+process.exit(0);
 EOF
+
+node --input-type=module <<EOF
+import EmceptionBox from "./build/package-box/package-box.mjs";
+await EmceptionBox({
+  thisProgram: "tar",
+  arguments: ["tar", "--help"],
+});
+EOF
+
 
 node --input-type=module <<EOF
 import EmceptionBox from "./build/emception-box.mjs";

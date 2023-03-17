@@ -1,4 +1,4 @@
-add_library(wasm-utils EXCLUDE_FROM_ALL
+add_library(wasm-utils
   src/Buffer.cpp
   src/InitFunctions.cpp
   src/LinkingSection.cpp

@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index d3b2f270c..358c46b20 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -295,7 +295,7 @@ else()
+   endif()
+ endif()
+ 
+-if(EMSCRIPTEN)
++if(EMSCRIPTEN AND OFF)
+   if("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
+     add_link_flag("-sERROR_ON_WASM_CHANGES_AFTER_LINK")
+     add_link_flag("-sWASM_BIGINT")

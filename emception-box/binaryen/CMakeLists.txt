@@ -1,10 +1,9 @@
 set(BUILD_TESTS OFF CACHE BOOL "" FORCE)
 
+fetch_archive("WebAssembly/binaryen" "8ab8e40d15a4d9f28ced76d28232f9e791f161d3" binaryen_ARCHIVE)
+
 FetchContent_Declare(binaryen
-    URL https://github.com/WebAssembly/binaryen/archive/8ab8e40d15a4d9f28ced76d28232f9e791f161d3.zip
+    URL           "${binaryen_ARCHIVE}"
+    PATCH_COMMAND patch -p1 -i ${CMAKE_CURRENT_SOURCE_DIR}/binaryen.patch
 )
-FetchContent_GetProperties(binaryen)
-if(NOT binaryen_POPULATED)
-  FetchContent_Populate(binaryen)
-  add_subdirectory(${binaryen_SOURCE_DIR} ${binaryen_BINARY_DIR} EXCLUDE_FROM_ALL)
-endif()
+FetchContent_MakeAvailable(binaryen)
