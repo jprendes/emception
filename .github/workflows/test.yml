@@ -1,0 +1,35 @@
+name: Test
+on:
+  push:
+    branches: [main]
+    paths:
+      - box_src/**
+      - docker/**
+      - emlib/**
+      - packs/**
+      - patches/**
+      - quicknode/**
+      - src/**
+      - tooling/**
+      - "*.sh"
+      - .github/workflows/test.yml
+  pull_request:
+    branches: [main]
+    paths:
+      - box_src/**
+      - docker/**
+      - emlib/**
+      - packs/**
+      - patches/**
+      - quicknode/**
+      - src/**
+      - tooling/**
+      - "*.sh"
+      - .github/workflows/test.yml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      # If this succeeds, the test has passed!
+      - run: ./build-with-docker.sh

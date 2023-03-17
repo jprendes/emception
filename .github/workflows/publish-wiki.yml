@@ -1,0 +1,19 @@
+name: Publish wiki
+on:
+  push:
+    branches: [main]
+    paths: [wiki/**, .github/workflows/publish-wiki.yml]
+concurrency:
+  group: publish-wiki
+  cancel-in-progress: true
+permissions:
+  contents: write
+jobs:
+  publish-wiki:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: spenserblack/actions-wiki@v0.1.1
+        with:
+          token: x:${{ secrets.GITHUB_TOKEN }}
+          wiki-directory: wiki
