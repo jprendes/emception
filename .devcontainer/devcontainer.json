@@ -1,0 +1,6 @@
+{
+  "image": "mcr.microsoft.com/devcontainers/universal",
+  "features": {
+    "ghcr.io/ebaskoro/devcontainer-features/emscripten": {}
+  }
+}
