@@ -5,7 +5,7 @@
 
 <div align="center">
 
-![](https://i.imgur.com/LIeQZBK.png)
+![](https://i.imgur.com/ahBogtB.png)
 
 <!-- prettier-ignore -->
 [Documentation](https://emception.github.io/emception/)
