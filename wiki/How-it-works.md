@@ -1,5 +1,40 @@
 _Originally discussed in [jprendes/emception#15]_
 
+Emception is Emscripten, but running on WASM polyfills in the browser. There are
+a few components of Emscripten that we need to get working to realize this idea.
+
+The only part we _really_ care about is the `em++` entrypoint into the
+Emscripten compiler architecture. As it turns out, this is a Python script. So,
+to run it, we need to bundle some kind of Python runtime to WASM for the browser
+to interpret. In our case, we use [CPython], though we've previously used
+[Pyodide]. But, it's not quite that simple (because _of course_ it's not that
+simple). We need to apply some custom code to patch the CPython upstream and get
+it to work for our usecase. We do that in [emception/cpython].
+
+After we have our custom CPython stuff compiled to WASM and all bundled up, we
+need to patch a few things _inside_ the Python script because, guess what,
+there's more complexity. The `em++` Python script actually _invokes other
+commands_ to do the grunt work of compiling the C++ code and doing all the other
+magic (what, you thought that Emscripten was a C++ compiler written in Python?)
+of generating a `.wasm` binary and the associated JavaScript glue code.
+
+In fact, this is where we hit another hurdle: `em++` invokes some Node.js
+scripts. This means we need to ship _another_ WASM runtime, this time for
+Node.js applications... Right? Nope! We can be cheeky and only polyfill a few
+global objects inside of a QuickJS build and it works! These Node.js scripts are
+fairly simple, and thus don't require much in the way of emulating the full
+Node.js suite of modules and capabilities. It's enough to just touch a few
+`process.*` things and be done.
+
+As for the other assorted [LLVM] and [Binaryen] binaries that these scripts
+invoke with various arguments, we just need them to be compiled to WebAssembly
+too, with some file system emulation to make them accept the input we want. Oh,
+and don't forget to copy over all the expected library files too; you'll be
+needing `stdio.h` and friends!
+
+<details>
+  <summary>Relevant quotation</summary>
+
 > Emception now uses upstream CPython instead of Pyodide. Emception is now using
 > a build of QuickJS instead of (very) hacky JS code to emulate NodeJS. It
 > implements the minimum required libraries to get Emscripten running. Now, the
@@ -101,5 +136,7 @@ _Originally discussed in [jprendes/emception#15]_
 >
 > I hope that was helpful and answered your questions! I'll keep the issue open
 > in case you have further questions.
+
+</details>
 
 [jprendes/emception#15]: https://github.com/jprendes/emception/issues/15
