@@ -11,8 +11,9 @@ FetchContent_GetProperties(cpython)
 file(MAKE_DIRECTORY ${cpython_BINARY_DIR}-host)
 
 add_custom_command(OUTPUT ${cpython_BINARY_DIR}-host/python
-    COMMAND
-        ${cpython_SOURCE_DIR}/configure -C
+    COMMAND 
+        rm -f config.cache
+        && ${cpython_SOURCE_DIR}/configure -C
         && ${CMAKE_CURRENT_LIST_DIR}/parallel_make.sh -s
 
     USES_TERMINAL
@@ -24,12 +25,13 @@ add_custom_command(OUTPUT ${cpython_BINARY_DIR}-host/python
 execute_process(COMMAND ${cpython_SOURCE_DIR}/config.guess OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE cpython_CONFIG_GUESS)
 add_custom_command(OUTPUT ${cpython_BINARY_DIR}/Makefile
     COMMAND
-        env
+        rm -f config.cache
+        && env
             CONFIG_SITE=${cpython_SOURCE_DIR}/Tools/wasm/config.site-wasm32-emscripten
             LIBSQLITE3_CFLAGS=" "
             BZIP2_CFLAGS=" "
             PYTHONPATH=${cpython_SOURCE_DIR}/Lib
-            OPT="-DNDEBUG -fwrapv -Oz -Wall"
+            OPT=-DNDEBUG\ -fwrapv\ -Oz\ -Wall
             emconfigure ${cpython_SOURCE_DIR}/configure -C
                 --host=wasm32-unknown-emscripten
                 --build=${cpython_CONFIG_GUESS}

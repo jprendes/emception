@@ -1,6 +1,7 @@
 # build artifacts
 build/
 upstream/
+.cache
 
 # build cache files
 **/*.idx
