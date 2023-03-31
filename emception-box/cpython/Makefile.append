@@ -11,3 +11,9 @@ pythonstdlib.zip: wasm_stdlib
 	cd .$(prefix)/lib/ && cp -f python*.zip pythonstdlib.zip
 	cd .$(prefix)/lib/python$(VERSION)/ && zip ../pythonstdlib.zip -r ./*
 	mv -f .$(prefix)/lib/pythonstdlib.zip ./
+
+pythonstdlib.tar: pythonstdlib.zip
+	rm -Rf pythonstdlib.tar pythonstdlib_tar
+	mkdir -p pythonstdlib_tar/$(prefix)/lib/python$(VERSION)/
+	unzip pythonstdlib.zip -d pythonstdlib_tar/$(prefix)/lib/python$(VERSION)/
+	cd pythonstdlib_tar && tar -cf ../pythonstdlib.tar ./*

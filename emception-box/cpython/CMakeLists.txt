@@ -54,9 +54,9 @@ add_custom_command(
     OUTPUT
         ${cpython_BINARY_DIR}/Programs/python.o
         ${cpython_BINARY_DIR}/libpython-bundle.a
-        ${cpython_BINARY_DIR}/pythonstdlib.zip
+        ${cpython_BINARY_DIR}/pythonstdlib.tar
     
-    COMMAND ${CMAKE_CURRENT_LIST_DIR}/parallel_make.sh -s Programs/python.o libpython-bundle.a pythonstdlib.zip
+    COMMAND ${CMAKE_CURRENT_LIST_DIR}/parallel_make.sh -s Programs/python.o libpython-bundle.a pythonstdlib.tar
     USES_TERMINAL
     DEPENDS ${cpython_BINARY_DIR}/Makefile
     WORKING_DIRECTORY ${cpython_BINARY_DIR}
@@ -68,3 +68,15 @@ add_executable(python ${cpython_BINARY_DIR}/Programs/python.o)
 target_link_libraries(python m ${cpython_BINARY_DIR}/libpython-bundle.a)
 set_target_properties(python PROPERTIES LINKER_LANGUAGE CXX)
 target_link_options(python PUBLIC -sUSE_ZLIB --preload-file=${cpython_BINARY_DIR}/usr/local@/usr/local)
+
+add_custom_command(OUTPUT python-stdlib.tar
+    COMMAND cp -f ${cpython_BINARY_DIR}/pythonstdlib.tar python-stdlib.tar
+    USES_TERMINAL
+    DEPENDS ${cpython_BINARY_DIR}/pythonstdlib.tar
+    COMMAND_EXPAND_LISTS
+    VERBATIM
+)
+
+add_custom_target(python-stdlib
+    DEPENDS python-stdlib.tar
+)
