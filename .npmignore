@@ -1,0 +1,16 @@
+.github
+box_src
+build
+demo
+docker
+emlib
+packs
+patches
+quicknode
+src
+tooling
+upstream
+.gitignore
+*.sh
+node_modules
+yarn.lock

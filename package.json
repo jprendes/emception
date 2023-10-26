@@ -1,0 +1,15 @@
+{
+  "name": "@jprendes/emception",
+  "version": "1.0.0",
+  "author": "jprendes",
+  "license": "MIT",
+  "main": "dist/llvm-box.mjs",
+  "type": "module",
+  "types": "llvm-box.d.mts",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "dependencies": {
+    "@types/emscripten": "^1.39.8"
+  }
+}
