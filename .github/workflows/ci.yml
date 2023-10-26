@@ -1,0 +1,49 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - '*'
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Log in to registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
+      - name: Build
+        run: |
+          ./build-with-docker.sh
+      - uses: actions/upload-artifact@v3
+        with:
+          name: dist
+          path: |
+            ./build/llvm/bin/llvm-box.wasm
+            ./build/llvm/bin/llvm-box.mjs
+          retention-days: 7
+
+  release:
+    needs: build
+    name: Create Release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+      - uses: softprops/action-gh-release@v1
+        with:
+          files: dist/*.*
+      - name: Setup npmrc
+        run: |
+          echo "@jprendes:registry=https://npm.pkg.github.com/" >> .npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{secrets.GITHUB_TOKEN}}" >> .npmrc
+      - name: Publish
+        run: npm publish
