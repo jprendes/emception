@@ -87,7 +87,7 @@ This works particularly well in conjunction with a `brotli` build in WebAssembly
 
 ## `fsroot.js`
 This is an Emscripten library that lets you change the type of the root filesystem of an emscripten module. By default emscripten uses a `MEMFS` for the root, and mounts other type of filesystems in it (with the exception of `NODERAWFS`, which completely overrides the FS).
-With fsroot.fs you can specify the root to be a different type of FS. For example
+With fsroot.js you can specify the root to be a different type of FS. For example
 ```js
 import Module from "./module.mjs";
 
