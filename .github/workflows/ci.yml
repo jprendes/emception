@@ -17,6 +17,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Create swap space
+        shell: bash
+        run: |
+            sudo fallocate -l 15G /swapfile_new
+            sudo chmod 600 /swapfile_new
+            sudo mkswap /swapfile_new
+            sudo swapon /swapfile_new
+            sudo swapon --show
       - name: Log in to registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
       - name: Build
